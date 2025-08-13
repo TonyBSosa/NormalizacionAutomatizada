@@ -1,0 +1,6 @@
+﻿IdRegistro,Fecha,IdCliente,Cliente,Item1,Qty1,Price1,Item2,Qty2,Price2,Item3,Qty3,Price3
+1001,7/15/2025,C001,Ana López,P10,1,350,P20,2,150,P30,1,120
+1002,7/16/2025,C002,Carlos Pérez,P30,1,3800,,,,,,
+1003,7/17/2025,C003,María Gómez,P40,1,500,P50,1,120,,,
+1004,7/18/2025,C004,Luis Reyes,P60,2,2300,P30,1,3650,,,
+1005,7/19/2025,C005,Sofía Torres,P70,1,900,P20,1,160,,,
