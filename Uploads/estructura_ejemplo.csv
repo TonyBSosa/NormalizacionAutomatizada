@@ -1,7 +1,0 @@
-tabla,atributo,tipo,llave,dependencia_funcional(A→B)
-Cliente,ClienteID,INT,PK,
-Cliente,Nombre,VARCHAR(50),,
-Cliente,Correo,VARCHAR(50),,ClienteID → Correo
-Pedido,PedidoID,INT,PK,
-Pedido,Fecha,DATETIME,,
-Pedido,ClienteID,INT,FK,PedidoID → ClienteID

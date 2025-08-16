@@ -1,4 +1,0 @@
-tabla,atributo,tipo,llave,dependencia_funcional (A→B)
-DetalleOrden,IdOrden,INT,"PK,FK",
-DetalleOrden,IdArticulo,INT,"PK,FK",
-DetalleOrden,Cantidad,INT,,IdOrden → Cantidad

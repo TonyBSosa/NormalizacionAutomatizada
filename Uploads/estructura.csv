@@ -1,0 +1,13 @@
+tabla;atributo;tipo;llave
+Clientes;IdCliente;INT;PK
+Clientes;Nombre;NVARCHAR(100);
+Clientes;Email;NVARCHAR(100);
+Ordenes;IdOrden;INT;PK
+Ordenes;Fecha;DATE;
+Ordenes;IdCliente;INT;FK:Clientes(IdCliente)
+Articulos;IdArticulo;INT;PK
+Articulos;NombreArt;NVARCHAR(100);
+Articulos;Precio;DECIMAL(10,2);
+DetalleOrden;IdOrden;INT;PK,FK:Ordenes(IdOrden)
+DetalleOrden;IdArticulo;INT;PK,FK:Articulos(IdArticulo)
+DetalleOrden;Cantidad;INT;

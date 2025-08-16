@@ -1,4 +1,0 @@
-﻿atributo,tipo,llave
-Nombre,varchar(50),
-ID,INT,PK
-email,varchar(50),
