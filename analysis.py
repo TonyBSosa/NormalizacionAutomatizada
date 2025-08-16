@@ -5,6 +5,257 @@ import sql_access as SA
 import validators as V
 
 # ------------------ Estructura desde CSV ------------------
+def _get_pk_cols(conn, schema, table):
+    q = """
+    SELECT kcu.COLUMN_NAME
+    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+     AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+    WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+    ORDER BY kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+
+def _get_sql_cols(conn, schema, table):
+    q = """
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+
+def _get_fk_relations(conn, schema, table):
+    """
+    Retorna FKs desde (schema.table) hacia otras tablas, agrupadas por tabla referenciada.
+    [{ 'ref_schema':..., 'ref_table':..., 'from_cols':[...], 'to_cols':[...] }, ...]
+    """
+    q = """
+    SELECT
+      kcu.COLUMN_NAME AS FROM_COL,
+      kcu2.COLUMN_NAME AS TO_COL,
+      kcu2.TABLE_SCHEMA AS REF_SCHEMA,
+      kcu2.TABLE_NAME AS REF_TABLE
+    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG
+     AND kcu.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA
+     AND kcu.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu2
+      ON kcu2.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG
+     AND kcu2.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA
+     AND kcu2.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
+     AND kcu2.ORDINAL_POSITION   = kcu.ORDINAL_POSITION
+    WHERE kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME = ?
+    ORDER BY REF_SCHEMA, REF_TABLE, kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        rows = cur.fetchall()
+
+    by_ref = {}
+    for from_col, to_col, ref_schema, ref_table in rows:
+        k = (ref_schema, ref_table)
+        by_ref.setdefault(k, {'ref_schema': ref_schema, 'ref_table': ref_table,
+                              'from_cols': [], 'to_cols': []})
+        by_ref[k]['from_cols'].append(from_col)
+        by_ref[k]['to_cols'].append(to_col)
+    return list(by_ref.values())
+
+def _csv_cols_for_table(estructura_rows, tabla_csv):
+    want = (tabla_csv or "").strip().lower()
+    cols = []
+    for r in estructura_rows:
+        t = (r.get("tabla") or "").strip().lower()
+        a = (r.get("atributo") or "").strip()
+        if t == want and a:
+            cols.append(a)
+    return cols
+
+def _csv_tables_by_attr(estructura_rows):
+    """Mapa atributo -> set(tablas) según CSV (para detectar “mal ubicados”)."""
+    m = {}
+    for r in estructura_rows:
+        t = (r.get("tabla") or "").strip()
+        a = (r.get("atributo") or "").strip()
+        if not t or not a:
+            continue
+        m.setdefault(a, set()).add(t)
+    return m
+
+def _r_get(obj, key, default=None):
+    return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
+
+def _r_set(obj, key, value):
+    if isinstance(obj, dict):
+        obj[key] = value
+    else:
+        setattr(obj, key, value)
+
+        
+ 
+def _get_pk_cols(conn, schema, table):
+    q = """
+    SELECT kcu.COLUMN_NAME
+    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+     AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+    WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+    ORDER BY kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+    
+
+    
+
+def _get_sql_cols(conn, schema, table):
+    q = """
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+
+def _get_fk_relations(conn, schema, table):
+    """
+    FKs desde (schema.table) a otras tablas, con columnas emparejadas.
+    [{ 'ref_schema':..., 'ref_table':..., 'from_cols':[...], 'to_cols':[...] }, ...]
+    """
+    q = """
+    SELECT
+      kcu.COLUMN_NAME AS FROM_COL,
+      kcu2.COLUMN_NAME AS TO_COL,
+      kcu2.TABLE_SCHEMA AS REF_SCHEMA,
+      kcu2.TABLE_NAME AS REF_TABLE
+    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG
+     AND kcu.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA
+     AND kcu.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu2
+      ON kcu2.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG
+     AND kcu2.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA
+     AND kcu2.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
+     AND kcu2.ORDINAL_POSITION   = kcu.ORDINAL_POSITION
+    WHERE kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME = ?
+    ORDER BY REF_SCHEMA, REF_TABLE, kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        rows = cur.fetchall()
+
+    rels = []
+    by_ref = {}
+    for from_col, to_col, ref_schema, ref_table in rows:
+        key = (ref_schema, ref_table)
+        if key not in by_ref:
+            by_ref[key] = {'ref_schema': ref_schema, 'ref_table': ref_table,
+                           'from_cols': [], 'to_cols': []}
+        by_ref[key]['from_cols'].append(from_col)
+        by_ref[key]['to_cols'].append(to_col)
+    return list(by_ref.values())
+
+def _csv_cols_for_table(estructura_rows, tabla_csv):
+    want = tabla_csv.strip().lower()
+    cols = []
+    for r in estructura_rows:
+        t = (r.get("tabla") or "").strip().lower()
+        a = (r.get("atributo") or "").strip()
+        if t == want and a:
+            cols.append(a)
+    return cols
+
+def _csv_tables_by_attr(estructura_rows):
+    """
+    Mapa atributo -> {tabla1, tabla2, ...} según el CSV.
+    Sirve para detectar “mal ubicados” (misplaced).
+    """
+    m = {}
+    for r in estructura_rows:
+        t = (r.get("tabla") or "").strip()
+        a = (r.get("atributo") or "").strip()
+        if not t or not a:
+            continue
+        m.setdefault(a, set()).add(t)
+    return m
+
+def _get_pk_cols(conn, schema, table):
+    q = """
+    SELECT kcu.COLUMN_NAME
+    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+     AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+    WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+    ORDER BY kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+
+def _get_sql_cols(conn, schema, table):
+    q = """
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        return [r[0] for r in cur.fetchall()]
+
+def _get_fk_relations(conn, schema, table):
+    """
+    Retorna lista de FKs desde (schema.table) hacia otras tablas, con columnas emparejadas.
+    [{ 'ref_schema':..., 'ref_table':..., 'from_cols':[...], 'to_cols':[...] }, ...]
+    """
+    q = """
+    SELECT
+      kcu.COLUMN_NAME AS FROM_COL,
+      kcu2.COLUMN_NAME AS TO_COL,
+      kcu2.TABLE_SCHEMA AS REF_SCHEMA,
+      kcu2.TABLE_NAME AS REF_TABLE
+    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+      ON kcu.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG
+     AND kcu.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA
+     AND kcu.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
+    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu2
+      ON kcu2.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG
+     AND kcu2.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA
+     AND kcu2.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
+     AND kcu2.ORDINAL_POSITION   = kcu.ORDINAL_POSITION
+    WHERE kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME = ?
+    ORDER BY REF_SCHEMA, REF_TABLE, kcu.ORDINAL_POSITION
+    """
+    with conn.cursor() as cur:
+        cur.execute(q, (schema, table))
+        rows = cur.fetchall()
+
+    rels = []
+    by_ref = {}
+    for from_col, to_col, ref_schema, ref_table in rows:
+        key = (ref_schema, ref_table)
+        if key not in by_ref:
+            by_ref[key] = {'ref_schema': ref_schema, 'ref_table': ref_table,
+                           'from_cols': [], 'to_cols': []}
+        by_ref[key]['from_cols'].append(from_col)
+        by_ref[key]['to_cols'].append(to_col)
+    for v in by_ref.values():
+        rels.append(v)
+    return rels
+
+
+
+
 def estructura_por_tabla(rows):
     """
     Devuelve:

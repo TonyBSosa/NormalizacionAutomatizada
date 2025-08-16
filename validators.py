@@ -8,7 +8,7 @@ RE_FK       = re.compile(r"^FK\(\s*([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\s*\)$")  # F
 
 BASIC_TYPES = {
     "INT","BIGINT","SMALLINT","TINYINT",
-    "DATE","DATETIME","SMALLDATETIME","TIME",
+    "DATE","DATETIME","DATETIME2","SMALLDATETIME","TIME",
     "FLOAT","REAL","BIT","MONEY","SMALLMONEY",
     "TEXT","NTEXT","UNIQUEIDENTIFIER"
 }
