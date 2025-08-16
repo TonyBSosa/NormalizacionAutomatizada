@@ -1,0 +1,5 @@
+__tabla,ClienteID,Nombre,Correo,PedidoID,Fecha
+Cliente,1.0,Ana López,ana@mail.com,,
+Cliente,2.0,Pedro Ruiz,pedro@mail.com,,
+Pedido,,,,1001.0,2025-08-16
+Pedido,,,,1002.0,2025-08-17

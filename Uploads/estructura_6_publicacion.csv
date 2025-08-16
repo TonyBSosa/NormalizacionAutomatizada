@@ -1,0 +1,4 @@
+tabla,atributo,tipo,llave
+Publicacion,Titulo,NVARCHAR(200),
+Publicacion,Autor,NVARCHAR(100),
+Publicacion,Etiquetas,NVARCHAR(200),

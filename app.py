@@ -1,10 +1,23 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import os
+from itertools import combinations
+
+from scripts.normalizer import normalizar_pipeline
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+# ---------- Utilidades ----------
+def proper_subsets(pk_cols):
+    """Genera todos los subconjuntos propios (no vacíos) de una PK compuesta."""
+    for r in range(1, len(pk_cols)):
+        for combo in combinations(pk_cols, r):
+            yield list(combo)
+
 
 # ---------- 1FN ----------
 def es_valor_atomico(valor):
@@ -14,57 +27,92 @@ def es_valor_atomico(valor):
         return False
     return True
 
-def verificar_1FN(df):
+
+def verificar_1FN(df: pd.DataFrame):
     for col in df.columns:
         for val in df[col]:
             if not es_valor_atomico(val):
                 return False, col, val
     return True, None, None
 
-# ---------- 2FN ----------
-def verificar_2FN(estructura_df, datos_df):
+
+# ---------- 2FN (corregida) ----------
+def verificar_2FN(estructura_df: pd.DataFrame, datos_df: pd.DataFrame):
+    """
+    Marca dependencia parcial SOLO si un atributo no clave depende de un
+    subconjunto PROPIO de la PK y el determinante tiene al menos 2 valores distintos.
+    """
     mensajes = []
-    claves = estructura_df[estructura_df['llave'].str.contains('PK', na=False)]
-    tablas = estructura_df['tabla'].unique()
 
-    for tabla in tablas:
-        tabla_pk = claves[claves['tabla'] == tabla]['atributo'].tolist()
-        if len(tabla_pk) < 2:
-            continue  # Solo analizamos claves compuestas
+    estructura_df = estructura_df.copy()
+    estructura_df['llave'] = estructura_df.get('llave', pd.Series([""] * len(estructura_df))).astype(str)
 
-        columnas = estructura_df[estructura_df['tabla'] == tabla]['atributo'].tolist()
-        comunes = [c for c in tabla_pk if c in datos_df.columns]
+    for tabla, chunk in estructura_df.groupby('tabla'):
+        pk = chunk[chunk['llave'].str.contains('PK', case=False, na=False)]['atributo'].tolist()
+        if len(pk) < 2:
+            continue  # 2FN solo aplica a PK compuesta
 
-        if not all(col in datos_df.columns for col in tabla_pk):
+        attrs_tabla = [a for a in chunk['atributo'] if a in datos_df.columns]
+        if not attrs_tabla:
             continue
 
-        for col in datos_df.columns:
-            if col not in tabla_pk:
-                df_temp = datos_df.groupby(comunes)[col].nunique().reset_index()
-                if df_temp[col].max() == 1:
+        df_t = datos_df[attrs_tabla].copy()
+
+        for sub in proper_subsets(pk):
+            candidatos = [c for c in attrs_tabla if c not in pk]  # no-claves
+            for col in candidatos:
+                try:
+                    g = df_t.groupby(sub)[col].nunique(dropna=True)
+                except Exception:
+                    continue
+                if g.index.nunique() >= 2 and g.max() == 1:
                     mensajes.append(
-                        f"❌ '{col}' depende solo de parte de la clave compuesta {comunes} en la tabla '{tabla}'"
+                        f"❌ '{col}' depende solo de parte de la clave compuesta {sub} en la tabla '{tabla}'"
                     )
 
     if not mensajes:
         mensajes.append("✅ Los datos cumplen con la Segunda Forma Normal (2FN).")
-
     return mensajes
 
-# ---------- 3FN ----------
-def verificar_3FN(datos_df):
+
+# ---------- 3FN (ajustada para reducir falsos positivos) ----------
+def verificar_3FN(datos_df: pd.DataFrame, estructura_df: pd.DataFrame | None = None):
+    """
+    Reporta dependencias NO-CLAVE -> NO-CLAVE (A→B) usando una heurística prudente:
+    - Ignora determinantes que son parte de la PK.
+    - Exige que el determinante tenga algún valor repetido (>=2 ocurrencias).
+    """
+    pk = set()
+    if estructura_df is not None and 'llave' in estructura_df.columns:
+        pk = set(
+            estructura_df[
+                estructura_df['llave'].astype(str).str.contains('PK', case=False, na=False)
+            ]['atributo'].tolist()
+        )
+
+    cols = [c for c in datos_df.columns if c != "__tabla"]
+    non_keys = [c for c in cols if c not in pk]
+
     mensajes = []
-    for col in datos_df.columns:
-        for other_col in datos_df.columns:
-            if col != other_col:
-                df_temp = datos_df.groupby(col)[other_col].nunique().reset_index()
-                if df_temp[other_col].max() == 1:
-                    mensajes.append(
-                        f"❌ Existe una dependencia transitoria: '{other_col}' depende de '{col}'"
-                    )
-                    return mensajes
-    mensajes.append("✅ Los datos cumplen con la Tercera Forma Normal (3FN).")
+    for det in non_keys:
+        # REQUISITO: el determinante debe repetirse
+        counts = datos_df[det].value_counts(dropna=True)
+        if counts.empty or counts.max() < 2:
+            continue
+        for target in non_keys:
+            if target == det:
+                continue
+            try:
+                g = datos_df.groupby(det)[target].nunique(dropna=True)
+            except Exception:
+                continue
+            if g.max() == 1:
+                mensajes.append(f"❌ Existe una dependencia transitoria: '{target}' depende de '{det}'")
+
+    if not mensajes:
+        mensajes.append("✅ Los datos cumplen con la Tercera Forma Normal (3FN).")
     return mensajes
+
 
 # ---------- FLASK ----------
 @app.route('/', methods=['GET', 'POST'])
@@ -75,16 +123,25 @@ def index():
     resultado_2fn = None
     resultado_3fn = None
 
-    if request.method == 'POST':
-        estructura_file = request.files['estructura']
-        datos_file = request.files['datos']
+    # salidas nuevas
+    diagram_mermaid = None
+    sql_script = None
+    descripcion = None
+    tablas_result_html = []  # [(name, html)]
+    resumen_acciones = None
 
-        if estructura_file and estructura_file.filename.endswith('.csv'):
+    if request.method == 'POST':
+        estructura_file = request.files.get('estructura')
+        datos_file = request.files.get('datos')
+
+        # Lectura de estructura
+        if estructura_file and estructura_file.filename.lower().endswith('.csv'):
             estructura_path = os.path.join(app.config['UPLOAD_FOLDER'], estructura_file.filename)
             estructura_file.save(estructura_path)
             estructura_df = pd.read_csv(estructura_path)
 
-        if datos_file and datos_file.filename.endswith('.csv'):
+        # Lectura de datos
+        if datos_file and datos_file.filename.lower().endswith('.csv'):
             datos_path = os.path.join(app.config['UPLOAD_FOLDER'], datos_file.filename)
             datos_file.save(datos_path)
             datos_df = pd.read_csv(datos_path)
@@ -97,12 +154,23 @@ def index():
                 resultado_1fn = f"❌ No cumple con 1FN. Columna '{col}' tiene valor no atómico: '{val}'"
 
             # 2FN
-            if cumple_1fn and estructura_df is not None:
+            if estructura_df is not None:
                 resultado_2fn = verificar_2FN(estructura_df, datos_df)
 
             # 3FN
-            if cumple_1fn:
-                resultado_3fn = verificar_3FN(datos_df)
+            resultado_3fn = verificar_3FN(datos_df, estructura_df)
+
+            # ---------- Pipeline de normalización y visualización ----------
+            if estructura_df is not None:
+                schema_final, tablas_data, diagram_mermaid, sql_script, descripcion, resumen_acciones = normalizar_pipeline(
+                    estructura_df, datos_df
+                )
+                # Render de primeras filas de cada tabla resultante:
+                for name, df in tablas_data.items():
+                    tablas_result_html.append((
+                        name,
+                        df.head(50).to_html(classes='table table-sm table-striped', index=False)
+                    ))
 
     return render_template(
         'index.html',
@@ -110,8 +178,14 @@ def index():
         datos=datos_df.to_html(classes='table table-striped', index=False) if datos_df is not None else None,
         resultado_1fn=resultado_1fn,
         resultado_2fn=resultado_2fn,
-        resultado_3fn=resultado_3fn
+        resultado_3fn=resultado_3fn,
+        diagram_mermaid=diagram_mermaid,
+        sql_script=sql_script,
+        descripcion=descripcion,
+        tablas_result_html=tablas_result_html,
+        resumen_acciones=resumen_acciones
     )
+
 
 if __name__ == '__main__':
     app.run(debug=True)

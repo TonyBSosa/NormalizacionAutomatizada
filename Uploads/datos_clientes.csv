@@ -1,4 +1,4 @@
-﻿Id_Cliente,Nombre,Email
-1,Ana López,ana@correo.com
-2,Carlos Pérez,carlos@correo.com
-3,María Gómez,maria@correo.com
+IdCliente,Nombre,Telefonos,Direccion
+1,Juan,"9999-1111, 8888-2222",Col. Centro
+2,Ana,7777-3333,Col. Jardines
+3,Pedro,5555-4444; 4444-5555,Col. San José
