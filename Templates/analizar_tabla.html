@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Reporte de normalización</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Reporte detallado de normalización de base de datos">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary:#6366f1; --primary-hover:#4f46e5; --secondary:#ec4899;
+      --success:#10b981; --success-light:#d1fae5;
+      --error:#ef4444; --error-light:#fee2e2;
+      --warning:#f59e0b; --warning-light:#fef3c7;
+      --bg-primary:#ffffff; --bg-secondary:#f8fafc; --bg-tertiary:#f1f5f9;
+      --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8;
+      --border-light:#e2e8f0; --border-medium:#cbd5e1;
+      --shadow-sm:0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --radius-sm:.375rem; --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem;
+    }
+    body{font-family:'Inter',system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;margin:0;padding:2rem 1rem;color:var(--text-primary);}
+    .container{max-width:1024px;margin:0 auto;position:relative;}
+    .particle{position:absolute;border-radius:50%;pointer-events:none;opacity:.1;animation:float 6s infinite linear;}
+    @keyframes float{0%{transform:translateY(100vh) rotate(0deg);}100%{transform:translateY(-100px) rotate(360deg);}}
+    .glass-morphism{background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.2);box-shadow:var(--shadow-lg);text-align:center;padding:2rem;border-radius:var(--radius-xl);margin-bottom:3rem;}
+    h1{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 1rem 0;line-height:1.2;}
+    .subtitle{font-size:1.125rem;color:var(--text-secondary);margin:0;font-weight:400;}
+    .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:9999px;font-size:.8rem;font-weight:600;border:1px solid transparent}
+    .ok{background:var(--success-light);color:var(--success);border-color:var(--success);}
+    .bad{background:var(--error-light);color:var(--error);border-color:var(--error);}
+    .warn{background:var(--warning-light);color:var(--warning);border-color:var(--warning);}
+    .card{background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-md);border:1px solid var(--border-light);transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary));opacity:0;transition:opacity .3s ease;}
+    .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+    .card:hover::before{opacity:1;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border:2px solid transparent;border-radius:var(--radius-md);text-decoration:none;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.4);}
+    .btn[disabled]{opacity:.6;cursor:not-allowed;}
+    .btn::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.2);border-radius:50%;transition:all .3s ease;transform:translate(-50%,-50%);}
+    .btn:hover::before{width:300px;height:300px;}
+    h2{margin-top:2rem;font-size:1.5rem;color:var(--text-primary);position:relative;padding-bottom:.5rem;}
+    h2::after{content:'';position:absolute;bottom:0;left:0;width:60px;height:3px;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:3px;}
+    h3{font-size:1.25rem;margin-top:1.5rem;color:var(--text-secondary);}
+    ul{padding-left:1.5rem;list-style:none;}
+    ul li{margin-bottom:.5rem;position:relative;padding-left:1.5rem;}
+    ul li::before{content:'•';position:absolute;left:0;color:var(--primary);font-weight:bold;}
+    code{background:var(--bg-tertiary);padding:.25rem .5rem;border-radius:var(--radius-sm);font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.875rem;color:var(--text-primary);border:1px solid var(--border-light);}
+    table{border-collapse:collapse;width:100%;margin-top:1.5rem;background:var(--bg-primary);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);}
+    th,td{border:1px solid var(--border-light);padding:.75rem 1rem;font-size:.875rem;text-align:left;}
+    th{background:var(--bg-secondary);font-weight:600;color:var(--text-primary);}
+    tr:nth-child(even){background-color:var(--bg-tertiary);}
+    .back-link{display:inline-flex;align-items:center;gap:.5rem;color:var(--primary);text-decoration:none;margin-top:2rem;font-weight:500;transition:color .2s ease;}
+    .back-link:hover{color:var(--primary-hover);}
+    @media (max-width:768px){body{padding:1rem;}h1{font-size:2rem;}.card{padding:1.5rem;}.btn{padding:.625rem 1.25rem;font-size:.875rem;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Partículas flotantes -->
+    <div class="particle" style="left:10%;width:20px;height:20px;background:var(--primary);animation-delay:0s;animation-duration:8s;"></div>
+    <div class="particle" style="left:20%;width:15px;height:15px;background:var(--secondary);animation-delay:1s;animation-duration:7s;"></div>
+    <div class="particle" style="left:30%;width:25px;height:25px;background:var(--success);animation-delay:2s;animation-duration:9s;"></div>
+    <div class="particle" style="left:70%;width:18px;height:18px;background:var(--primary);animation-delay:3s;animation-duration:6s;"></div>
+    <div class="particle" style="left:80%;width:22px;height:22px;background:var(--secondary);animation-delay:4s;animation-duration:8s;"></div>
+
+    <!-- Header -->
+    <header class="glass-morphism">
+      <h1><i class="fas fa-database"></i>
+        Reporte: {{ (result and (result.schema ~ '.' ~ result.table)) or '—' }}
+      </h1>
+      <p class="subtitle">Definida como {{ csv_table|default('—') }} en CSV</p>
+      <!-- Estado de conexión -->
+      {% if has_conn %}
+        <span class="badge ok"><i class="fas fa-plug"></i> Conectado a SQL Server</span>
+      {% else %}
+        <span class="badge bad"><i class="fas fa-plug-circle-xmark"></i> Sin conexión</span>
+      {% endif %}
+    </header>
+
+    {% if result %}
+      <div class="card">
+        <h2>Resumen de esquema</h2>
+        <ul>
+          <li><b>PK:</b> {{ (result.pk_cols|default([]))|join(', ') if result.pk_cols else '—' }}</li>
+          <li><b>UNIQUE sets:</b>
+            {% set u = result.unique_sets|default([]) %}
+            {% if u and u|length %}
+              {% for s in u %}<code>{{ s|join('+') }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}—{% endif %}
+          </li>
+          <li><b>Atributos "prime":</b> {{ (result.prime_cols|default([]))|join(', ') }}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>1FN</h2>
+        <h3>Atomocidad (ejemplos problemáticos)</h3>
+        {% set atomic = result.one_nf.atomic_issues|default([]) %}
+        {% if atomic and atomic|length %}
+          <ul>
+            {% for c, v in atomic %}
+              <li class="bad">{{ c }} → ejemplo no atómico: <code>{{ v }}</code></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="ok">✅ Sin problemas de atomocidad en la muestra.</p>
+        {% endif %}
+
+        <h3>Grupos repetidos por nombre</h3>
+        {% set groups = result.one_nf.name_groups|default([]) %}
+        {% if groups and groups|length %}
+          <ul>
+            {% for base, cols in groups %}
+              <li class="warn">⚠️ Grupo <code>{{ base }}</code>: {{ cols|join(', ') }} (sugiere separar en tabla hija)</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="ok">✅ No se detectaron patrones tipo Telefono1/Telefono2.</p>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2>2FN (solo aplica si PK es compuesta)</h2>
+        {% set v2 = result.two_nf|default([]) %}
+        {% if v2 and v2|length %}
+          <table>
+            <thead><tr><th>Subclave</th><th>Atributo</th><th>Explicación</th></tr></thead>
+            <tbody>
+              {% for v in v2 %}
+                <tr>
+                  <td><code>{{ v.subset|join('+') }}</code></td>
+                  <td>{{ v.attr }}</td>
+                  <td>{{ v.explain }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="ok">✅ Sin violaciones de 2FN detectadas.</p>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2>3FN</h2>
+        {% set v3 = result.three_nf|default([]) %}
+        {% if v3 and v3|length %}
+          <table>
+            <thead><tr><th>Cadena</th><th>Motivo</th></tr></thead>
+            <tbody>
+              {% for v in v3 %}
+                <tr>
+                  <td><code>{{ v.chain }}</code></td>
+                  <td>{{ v.reason }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="ok">✅ Sin violaciones de 3FN detectadas.</p>
+        {% endif %}
+      </div>
+
+      <div style="text-align:center; margin-top:2rem;">
+        {% if has_conn %}
+          <a class="btn btn-primary"
+             href="{{ url_for('generar_scripts', csv_table=csv_table, schema=result.schema, table=result.table) }}">
+            <i class="fas fa-tools"></i> Generar scripts de normalización
+          </a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('conectar_sql') }}" title="Conéctate a SQL Server primero">
+            <i class="fas fa-plug"></i> Conectar a SQL Server
+          </a>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="card">
+        <p class="bad"><i class="fas fa-triangle-exclamation"></i>
+          No se recibió un resultado de análisis. Vuelve a
+          <a href="{{ url_for('analizar') }}">Analizar</a> y elige la tabla.
+        </p>
+      </div>
+    {% endif %}
+
+    <a class="back-link" href="{{ url_for('analizar') }}">
+      <i class="fas fa-arrow-left"></i> Volver al análisis
+    </a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, i) => {
+        card.style.animationDelay = `${i * 0.1}s`;
+        card.classList.add('fade-in');
+      });
+    });
+  </script>
+</body>
+</html>

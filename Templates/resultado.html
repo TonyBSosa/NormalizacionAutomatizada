@@ -1,0 +1,477 @@
+ <!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Resultado de validación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Resultado de validación de estructura de archivo">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      /* Colores principales */
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --secondary: #ec4899;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --error: #ef4444;
+      --error-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      
+      /* Fondos */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --bg-tertiary: #f1f5f9;
+      
+      /* Textos */
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      /* Bordes y sombras */
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      
+      /* Radios */
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem 1rem;
+      color: var(--text-primary);
+    }
+
+    .container {
+      max-width: 1024px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Partículas flotantes */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.1;
+      animation: float 6s infinite linear;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); }
+      100% { transform: translateY(-100px) rotate(360deg); }
+    }
+
+    /* Header con Glassmorphism */
+    .glass-morphism {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      padding: 2rem;
+      border-radius: var(--radius-xl);
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 1rem 0;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      margin: 0;
+      font-weight: 400;
+    }
+
+    /* Cards Modernas */
+    .card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    /* Botones Modernos */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-medium);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Efecto ripple */
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      transform: translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    /* Badges Informativos */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.ok {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .badge.bad {
+      background: var(--error-light);
+      color: var(--error);
+      border: 1px solid var(--error);
+    }
+
+    .badge.warn {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+
+    /* Estilos específicos del reporte */
+    h2, h3 {
+      margin-top: 1.5rem;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    h2::after, h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 3px;
+    }
+
+    .list {
+      padding-left: 1.5rem;
+      list-style-type: none;
+    }
+
+    .list li {
+      margin-bottom: 0.75rem;
+      position: relative;
+      padding-left: 1.75rem;
+      line-height: 1.5;
+    }
+
+    .list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+
+    .list li.error::before {
+      color: var(--error);
+    }
+
+    .list li.warning::before {
+      color: var(--warning);
+    }
+
+    .status-message {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+
+    .status-message.ok {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .status-message.bad {
+      background: var(--error-light);
+      color: var(--error);
+      border: 1px solid var(--error);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1.5rem 0;
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    th, td {
+      border: 1px solid var(--border-light);
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--bg-tertiary);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      margin-top: 2rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: var(--primary-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .card {
+        padding: 1.5rem;
+      }
+      
+      .btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Partículas flotantes animadas -->
+    <div class="particle" style="left: 10%; width: 20px; height: 20px; background: var(--primary); animation-delay: 0s; animation-duration: 8s;"></div>
+    <div class="particle" style="left: 20%; width: 15px; height: 15px; background: var(--secondary); animation-delay: 1s; animation-duration: 7s;"></div>
+    <div class="particle" style="left: 30%; width: 25px; height: 25px; background: var(--success); animation-delay: 2s; animation-duration: 9s;"></div>
+    <div class="particle" style="left: 70%; width: 18px; height: 18px; background: var(--primary); animation-delay: 3s; animation-duration: 6s;"></div>
+    <div class="particle" style="left: 80%; width: 22px; height: 22px; background: var(--secondary); animation-delay: 4s; animation-duration: 8s;"></div>
+    
+    <!-- Header con glassmorphism -->
+    <header class="glass-morphism">
+      <h1><i class="fas fa-file-alt"></i> Validación de estructura: {{ filename }}</h1>
+    </header>
+    
+    <!-- Contenido en cards -->
+    <div class="card">
+      {% if ok %}
+        <div class="status-message ok">
+          <i class="fas fa-check-circle"></i> Archivo válido
+        </div>
+        
+        <div class="button-group">
+          <a class="btn btn-primary" href="{{ url_for('conectar_sql') }}">
+            <i class="fas fa-database"></i> Conectar a SQL Server
+          </a>
+          <a class="btn btn-secondary" href="{{ url_for('analizar') }}" {% if not has_conn %}disabled{% endif %}>
+            <i class="fas fa-chart-bar"></i> Ir al analizador
+          </a>
+        </div>
+      {% else %}
+        <div class="status-message bad">
+          <i class="fas fa-times-circle"></i> Se encontraron errores. Corrige y vuelve a subir el archivo.
+        </div>
+      {% endif %}
+
+      {% if errors and errors|length %}
+        <h3>Errores</h3>
+        <ul class="list">
+          {% for e in errors %}
+            <li class="error">{{ e }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if warnings and warnings|length %}
+        <h3>Advertencias</h3>
+        <ul class="list">
+          {% for w in warnings %}
+            <li class="warning">{{ w }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Vista previa (primeras filas)</h3>
+      <table>
+        <thead>
+          {% if rows_preview and rows_preview[0] %}
+            <tr>
+            {% for k in rows_preview[0].keys() %}
+              <th>{{ k }}</th>
+            {% endfor %}
+            </tr>
+          {% endif %}
+        </thead>
+        <tbody>
+          {% for r in rows_preview %}
+            <tr>
+            {% for v in r.values() %}
+              <td>{{ v }}</td>
+            {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <a class="back-link" href="{{ url_for('index') }}">
+      <i class="fas fa-arrow-left"></i> Volver al inicio
+    </a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Animaciones de entrada
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+      });
+    });
+  </script>
+</body>
+</html>

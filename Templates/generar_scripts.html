@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Generar scripts de normalización</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --primary:#6366f1; --secondary:#ec4899;
+      --success:#10b981; --success-light:#d1fae5;
+      --error:#ef4444; --error-light:#fee2e2;
+      --bg:#ffffff; --bg2:#f8fafc; --bg3:#f1f5f9;
+      --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --shadow:0 10px 15px -3px rgb(0 0 0 / 0.1),0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --radius:16px;
+    }
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;color:var(--text);}
+    .container{max-width:1100px;margin:32px auto;padding:0 16px;}
+    .glass{background:rgba(255,255,255,.95);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:22px;padding:24px 24px 8px;box-shadow:var(--shadow);margin-bottom:24px;}
+    h1{margin:0 0 6px;font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .sub{color:var(--muted);margin:0 0 12px;}
+    .badge{display:inline-flex;gap:.5rem;align-items:center;padding:.35rem .75rem;border-radius:999px;border:1px solid transparent;font-size:.8rem;font-weight:600}
+    .ok{background:var(--success-light);color:var(--success);border-color:var(--success)}
+    .err{background:var(--error-light);color:var(--error);border-color:var(--error)}
+    .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--border);background:var(--bg2);padding:.6rem .9rem;border-radius:10px;text-decoration:none;color:var(--text);cursor:pointer}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:#fff}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    pre{background:var(--bg3);border:1px solid var(--border);padding:14px;border-radius:12px;overflow:auto;max-height:60vh;white-space:pre;}
+    code{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.9rem}
+    table{border-collapse:collapse;width:100%;margin-top:8px;background:#fff;border-radius:12px;overflow:hidden}
+    th,td{border:1px solid var(--border);padding:8px 10px;font-size:.9rem;text-align:left}
+    th{background:var(--bg2)}
+    .muted{color:var(--muted)}
+    .footer-links{margin:16px 0 28px}
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="glass">
+      <h1><i class="fa-solid fa-screwdriver-wrench"></i> Scripts de normalización</h1>
+      <p class="sub">
+        Origen: <b>{{ schema|default('dbo') }}.{{ table|default('—') }}</b> · Definida en CSV como <b>{{ csv_table|default('—') }}</b>
+      </p>
+      {% if has_conn %}
+        <span class="badge ok"><i class="fa-solid fa-plug"></i> Conectado a SQL Server</span>
+      {% else %}
+        <span class="badge err"><i class="fa-solid fa-circle-xmark"></i> Sin conexión</span>
+      {% endif %}
+    </div>
+
+    <!-- Acciones -->
+    <div class="card">
+      <div class="row">
+        <button class="btn btn-primary" id="copyBtn"><i class="fa-regular fa-copy"></i> Copiar SQL</button>
+        <button class="btn" id="downloadBtn"><i class="fa-solid fa-file-arrow-down"></i> Descargar .sql</button>
+        <a class="btn" href="{{ url_for('analizar_tabla', csv_table=csv_table, schema=schema, table=table) }}">
+          <i class="fa-solid fa-arrow-left"></i> Volver al reporte
+        </a>
+        <a class="btn" href="{{ url_for('analizar') }}"><i class="fa-solid fa-table-list"></i> Volver a Analizar</a>
+      </div>
+    </div>
+
+    <!-- SQL generado -->
+    <div class="card">
+      <h3 style="margin:6px 0 10px">SQL generado</h3>
+      <pre id="sqlBox"><code>{{ (sql_text or '-- Sin contenido') | safe }}</code></pre>
+    </div>
+
+    <!-- Plan (resumen estructural) -->
+    <div class="card">
+      <h3 style="margin:6px 0 10px">Plan de normalización</h3>
+
+      {% set nt = plan.new_tables | default([]) %}
+      {% if nt and nt|length %}
+        <table>
+          <thead>
+            <tr>
+              <th>Fuente</th>
+              <th>Nueva tabla</th>
+              <th>PK</th>
+              <th>Columnas</th>
+              <th>Movidas de origen</th>
+              <th>FK sugerida</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in nt %}
+              <tr>
+                <td>{{ t.source }}</td>
+                <td><code>{{ t.name }}</code></td>
+                <td>
+                  {% if t.pk and t.pk|length %}
+                    <code>{{ t.pk|join(', ') }}</code>
+                  {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                  {% if t.cols and t.cols|length %}
+                    {% for c in t.cols %}
+                      <code>{{ c[0] }}</code>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                  {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                  {% if t.move_from_original and t.move_from_original|length %}
+                    <code>{{ t.move_from_original|join(', ') }}</code>
+                  {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                  {% if t.fk_from_original %}
+                    <code>{{ t.fk_from_original.from_table }}</code> → <code>{{ t.name }}</code>
+                  {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+              </tr>
+              {% if t.comment %}
+                <tr>
+                  <td colspan="6" class="muted">Nota: {{ t.comment }}</td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No hay tablas nuevas propuestas.</p>
+      {% endif %}
+
+      {% if plan.drop_candidates and plan.drop_candidates|length %}
+        <p style="margin-top:12px"><b>Candidatas a eliminar del original:</b>
+          <code>{{ plan.drop_candidates|join(', ') }}</code>
+        </p>
+      {% endif %}
+
+      {% if plan.notes and plan.notes|length %}
+        <ul style="margin-top:8px">
+          {% for n in plan.notes %}
+            <li class="muted">{{ n }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <div class="footer-links">
+      <a class="btn" href="{{ url_for('tablas') }}"><i class="fa-solid fa-database"></i> Ver tablas SQL</a>
+      <a class="btn" href="{{ url_for('index') }}"><i class="fa-solid fa-upload"></i> Subir otra estructura</a>
+    </div>
+  </div>
+
+  <script>
+    // Copiar al portapapeles
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const text = document.getElementById('sqlBox').innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('SQL copiado al portapapeles ✅');
+      } catch (e) {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        alert('SQL copiado (fallback) ✅');
+      }
+    });
+
+    // Descargar .sql
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const text = document.getElementById('sqlBox').innerText;
+      const blob = new Blob([text], { type: 'text/sql;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date();
+      const pad = n => (n < 10 ? '0' + n : '' + n);
+      const fname = `normalizacion_${('{{ schema|default("dbo") }}'.replaceAll('"','') || 'dbo')}_${('{{ table|default("tabla") }}'.replaceAll('"','') || 'tabla')}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}.sql`;
+      a.download = fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+

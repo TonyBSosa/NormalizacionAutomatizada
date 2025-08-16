@@ -1,0 +1,11 @@
+tabla,atributo,tipo,llave,dependencia_funcional(A→B)
+Clientes,IdCliente,INT,PK, 
+Clientes,Nombre,VARCHAR(100),,
+Clientes,Email,VARCHAR(100),,
+Productos,IdArticulo,INT,PK, 
+Productos,NombreArticulo,VARCHAR(100),,
+Productos,Precio,"DECIMAL(1zz0,2)",,
+Ordenes,IdOrden,INT,PK, 
+Ordenes,Fecha,DATE,,
+Ordenes,IdCliente,INT,FK(Clientes.IdCliente),
+DetalleOrden,IdOrden,INT,PK;FK(Ordenes.IdOrden),"IdOrden,IdArticulo→Cantidad"

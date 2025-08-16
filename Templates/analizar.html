@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Analizar tablas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 16px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; }
+    th { background: #f7f7f7; }
+    a.btn { display:inline-block; padding:6px 10px; border:1px solid #ccc; border-radius:8px; text-decoration:none; }
+    .muted { color:#666; }
+  </style>
+</head>
+<body>
+  <h1>Analizar tablas (1FN/2FN/3FN)</h1>
+  <p>Tablas definidas en el CSV y su par en SQL Server.</p>
+
+  <table>
+    <thead><tr><th>Tabla (CSV)</th><th>Tabla (SQL)</th><th>Acción</th></tr></thead>
+    <tbody>
+      {% for it in presentes %}
+        <tr>
+          <td>{{ it.csv }}</td>
+          <td>
+            {% if it.sql %}
+              {{ it.sql[0] }}.{{ it.sql[1] }}
+            {% else %}
+              <span class="muted">No encontrada en SQL</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if it.sql %}
+              <a class="btn" href="{{ url_for('analizar_tabla', csv_table=it.csv, schema=it.sql[0], table=it.sql[1]) }}">Analizar</a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p style="margin-top:16px">
+    <a href="{{ url_for('tablas') }}">Ver tablas SQL</a> ·
+    <a href="{{ url_for('index') }}">Subir otra estructura</a>
+    <p>
+  <a class="btn" href="{{ url_for('analizar_todo') }}">▶️ Analizar todas las tablas</a>
+</p>
+
+  </p>
+</body>
+</html>

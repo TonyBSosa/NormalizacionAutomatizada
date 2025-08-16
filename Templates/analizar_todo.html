@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Resultado global (1FN/2FN/3FN)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px 10px; font-size: 14px; }
+    th { background: #f7f7f7; }
+    .badge { padding: 3px 8px; border-radius: 999px; font-size: 12px; }
+    .ok { background:#e8f7e8; border:1px solid #9f9; }
+    .bad { background:#fdeaea; border:1px solid #f99; }
+    .warn { background:#fff6e0; border:1px solid #f0c36d; }
+    a.btn { display:inline-block; padding:6px 10px; border:1px solid #ccc; border-radius:8px; text-decoration:none; }
+    details { margin: 4px 0; }
+    code { background:#f6f6f6; padding:2px 4px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>Resultado global (1FN/2FN/3FN)</h1>
+  <p>Se analizaron todas las tablas detectadas en el CSV que existen en SQL.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tabla (CSV)</th>
+        <th>Tabla (SQL)</th>
+        <th>Estado</th>
+        <th>Resumen</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in resultados %}
+        <tr>
+          <td>{{ r.csv }}</td>
+          <td>
+            {% if r.schema %}
+              {{ r.schema }}.{{ r.table }}
+            {% else %}
+              <span class="badge warn">No encontrada</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.status == 'ok' %}
+              <span class="badge ok">OK</span>
+            {% elif r.status == 'problemas' %}
+              <span class="badge bad">Con problemas</span>
+            {% else %}
+              <span class="badge bad">Error</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.status == 'ok' %}
+              Sin hallazgos.
+            {% elif r.status == 'problemas' %}
+              <ul>
+                {% for i in r.issues %}<li>{{ i }}</li>{% endfor %}
+              </ul>
+              <details>
+                <summary>Ver ejemplos</summary>
+                <ul>
+                  {% set one = r.result.one_nf %}
+                  {% for c,v in (one.atomic_issues or [])[:3] %}
+                    <li>1FN (no atómico): <code>{{ c }}</code> → <code>{{ v }}</code></li>
+                  {% endfor %}
+                  {% for base, cols in (one.name_groups or [])[:3] %}
+                    <li>1FN (repetidos): base <code>{{ base }}</code> → {{ cols|join(', ') }}</li>
+                  {% endfor %}
+                  {% for v in (r.result.two_nf or [])[:3] %}
+                    <li>2FN: <code>{{ v.subset|join('+') }}</code> → {{ v.attr }}</li>
+                  {% endfor %}
+                  {% for v in (r.result.three_nf or [])[:3] %}
+                    <li>3FN: <code>{{ v.chain }}</code> — {{ v.reason }}</li>
+                  {% endfor %}
+                </ul>
+              </details>
+            {% else %}
+              {{ r.msg }}
+            {% endif %}
+          </td>
+          <td>
+            {% if r.schema %}
+              <a class="btn" href="{{ url_for('analizar_tabla', csv_table=r.csv, schema=r.schema, table=r.table) }}">Detalle</a>
+              {% if not r.ok %}
+                <a class="btn" href="{{ url_for('generar_scripts', csv_table=r.csv, schema=r.schema, table=r.table) }}">Generar scripts</a>
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p style="margin-top:16px">
+    <a href="{{ url_for('analizar') }}">⬅ Volver</a>
+  </p>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Tablas en SQL Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 16px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; }
+    th { background: #f7f7f7; }
+    .grid { display: grid; grid-template-columns: 1fr 180px; gap: 8px; }
+    a.btn { display:inline-block; padding: 6px 10px; border:1px solid #ccc; border-radius:8px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <h1>Tablas detectadas</h1>
+  <p>Conexión activa. Selecciona una tabla para ver una vista previa.</p>
+
+  {% if tables and tables|length %}
+    <table>
+      <thead><tr><th>Esquema</th><th>Tabla</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for t in tables %}
+          <tr>
+            <td>{{ t.schema }}</td>
+            <td>{{ t.name }}</td>
+            <td><a class="btn" href="{{ url_for('preview', schema=t.schema, table=t.name, top=5) }}">Ver TOP 5</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No se encontraron tablas base.</p>
+  {% endif %}
+
+  <p style="margin-top:16px">
+    <a href="{{ url_for('conectar_sql') }}">Cambiar conexión</a> ·
+    <a href="{{ url_for('index') }}">Subir estructura CSV</a>
+  </p>
+</body>
+</html>

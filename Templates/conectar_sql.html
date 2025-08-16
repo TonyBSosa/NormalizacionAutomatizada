@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Conectar a SQL Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
+    .flash { padding: 10px 12px; border-radius: 8px; margin: 10px 0; }
+    .error { background: #fee; border: 1px solid #f99; }
+    .success { background: #efe; border: 1px solid #9f9; }
+    label { display:block; margin-top: 8px; }
+    input, select { padding: 8px; width: 100%; box-sizing: border-box; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn { padding:8px 12px; border:1px solid #ccc; border-radius:8px; background:#fafafa; text-decoration:none; display:inline-block; }
+  </style>
+</head>
+<body>
+  <h1>Conectar a SQL Server</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <form method="post">
+      <label>Driver ODBC</label>
+      <input name="driver"
+             placeholder="{ODBC Driver 17 for SQL Server}"
+             value="{{ saved.driver | default('{ODBC Driver 17 for SQL Server}', true) }}"/>
+
+      <label>Servidor / Instancia</label>
+      <input name="server"
+             required
+             placeholder="EJ: MIHOST\\SQLEXPRESS,1433"
+             value="{{ saved.server | default('', true) }}"/>
+
+      <label>Base de datos</label>
+      <input name="database"
+             required
+             placeholder="EJ: MiBase"
+             value="{{ saved.database | default('', true) }}"/>
+
+      <label>Autenticación</label>
+      <select name="auth_mode" id="auth_mode" onchange="toggleAuth()">
+        {% set mode = saved.auth_mode | default('windows', true) %}
+        <option value="windows" {% if mode == 'windows' %}selected{% endif %}>Windows (Trusted_Connection)</option>
+        <option value="sql" {% if mode == 'sql' %}selected{% endif %}>SQL (usuario/contraseña)</option>
+      </select>
+
+      <div id="sql_auth" style="display:none">
+        <label>Usuario (SQL)</label>
+        <input name="uid" value="{{ saved.uid | default('', true) }}"/>
+        <label>Contraseña (SQL)</label>
+        <input type="password" name="pwd"/>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button type="submit" class="btn">Probar y guardar conexión</button>
+        <a class="btn" href="{{ url_for('index') }}">⬅ Volver</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function toggleAuth(){
+      var mode = document.getElementById('auth_mode').value;
+      document.getElementById('sql_auth').style.display = (mode === 'sql') ? 'block' : 'none';
+    }
+    toggleAuth();
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Vista previa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 16px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; }
+    th { background: #f7f7f7; }
+  </style>
+</head>
+<body>
+  <h1>Vista previa: {{ schema }}.{{ table }}</h1>
+
+  {% if err %}
+    <p style="color:#a00;">Error: {{ err }}</p>
+  {% else %}
+    {% if cols and rows %}
+      <table>
+        <thead>
+          <tr>
+            {% for c in cols %}<th>{{ c }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>{% for v in r %}<td>{{ v }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No hay filas que mostrar.</p>
+    {% endif %}
+  {% endif %}
+
+  <p style="margin-top:16px">
+    <a href="{{ url_for('tablas') }}">⬅ Volver a tablas</a>
+  </p>
+</body>
+</html>

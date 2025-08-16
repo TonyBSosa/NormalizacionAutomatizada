@@ -1,386 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Normalización - Análisis FN</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-        }
-
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
-            margin-top: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .page-title {
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .upload-section {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 2px dashed #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-
-        .section-title {
-            color: #495057;
-            font-weight: 600;
-            font-size: 1.3rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
-        }
-
-        .btn-upload {
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .btn-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-            color: white;
-        }
-
-        .data-section {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            background: var(--primary-gradient);
-            color: white;
-            font-weight: 600;
-            border: none;
-            padding: 1rem;
-        }
-
-        .table td {
-            padding: 0.75rem 1rem;
-            vertical-align: middle;
-            border-color: #f8f9fa;
-        }
-
-        .analysis-card {
-            border-radius: 15px;
-            border: none;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .analysis-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .alert-1fn {
-            background: var(--info-gradient);
-            color: #0c5460;
-            border: none;
-        }
-
-        .alert-2fn {
-            background: var(--warning-gradient);
-            color: #842029;
-            border: none;
-        }
-
-        .alert-3fn {
-            background: var(--success-gradient);
-            color: #0f5132;
-            border: none;
-        }
-
-        .analysis-title {
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .analysis-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .analysis-list li {
-            background: rgba(255, 255, 255, 0.3);
-            margin-bottom: 0.5rem;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            position: relative;
-            padding-left: 2.5rem;
-        }
-
-        .analysis-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 1rem;
-            color: inherit;
-            font-weight: bold;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.6s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .loading-spinner {
-            display: none;
-        }
-
-        .loading .loading-spinner {
-            display: inline-block;
-        }
-
-        .loading .btn-text {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-            
-            .page-title {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  <meta charset="utf-8"/>
+  <title>Normalización Automatizada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 16px; }
+    .flash { padding: 10px 12px; border-radius: 8px; margin: 10px 0; }
+    .error { background: #fee; border: 1px solid #f99; }
+    .success { background: #efe; border: 1px solid #9f9; }
+    .row { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .btn { display:inline-block; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; text-decoration: none; background: #fafafa; }
+    .btn[disabled] { opacity: .45; pointer-events: none; }
+    .badge { display:inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; }
+    .ok { background: #e8f7e8; border: 1px solid #9f9; }
+    .bad { background: #fdeaea; border: 1px solid #f99; }
+    code { background:#f6f6f6; padding:2px 4px; border-radius:4px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-container">
-            <h1 class="page-title">
-                <i class="fas fa-database"></i> Análisis de Normalización
-            </h1>
+  <h1>Normalización Automatizada</h1>
 
-            <!-- Sección de carga de archivos -->
-            <div class="upload-section">
-                <h2 class="section-title">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    Cargar Archivos de Datos
-                </h2>
-                
-                <form method="POST" enctype="multipart/form-data" id="uploadForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="estructura" class="form-label fw-semibold">
-                                    <i class="fas fa-table me-2"></i>Estructura (CSV)
-                                </label>
-                                <input type="file" name="estructura" id="estructura" 
-                                       accept=".csv" class="form-control" required>
-                                <div class="form-text">Archivo con la estructura de la tabla</div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="datos" class="form-label fw-semibold">
-                                    <i class="fas fa-file-csv me-2"></i>Datos Reales (CSV)
-                                </label>
-                                <input type="file" name="datos" id="datos" 
-                                       accept=".csv" class="form-control" required>
-                                <div class="form-text">Archivo con los datos a analizar</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-upload btn-lg">
-                            <span class="btn-text">
-                                <i class="fas fa-upload me-2"></i>Analizar Archivos
-                            </span>
-                            <span class="loading-spinner">
-                                <i class="fas fa-spinner fa-spin me-2"></i>Procesando...
-                            </span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-            <!-- Sección de estructura -->
-            {% if estructura %}
-            <div class="data-section fade-in">
-                <h3 class="section-title">
-                    <i class="fas fa-table text-primary"></i>
-                    Estructura de la Tabla
-                </h3>
-                <div class="table-responsive">
-                    {{ estructura | safe }}
-                </div>
-            </div>
-            {% endif %}
+  <!-- PASO 1 -->
+  <div class="card">
+    <h2>1) Cargar archivo de estructura</h2>
+    <p>Formatos aceptados: <b>.csv</b>. Encabezados mínimos: <code>tabla, atributo, tipo, llave</code>.</p>
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="row">
+      <input type="file" name="estructura" accept=".csv" required>
+      <button type="submit" class="btn">Subir y validar</button>
+      {% if has_csv %}
+        <span class="badge ok">Estructura cargada</span>
+      {% else %}
+        <span class="badge bad">Estructura pendiente</span>
+      {% endif %}
+    </form>
 
-            <!-- Sección de datos -->
-            {% if datos %}
-            <div class="data-section fade-in">
-                <h3 class="section-title">
-                    <i class="fas fa-database text-success"></i>
-                    Datos Reales
-                </h3>
-                <div class="table-responsive">
-                    {{ datos | safe }}
-                </div>
-            </div>
-            {% endif %}
+    <details style="margin-top:12px">
+      <summary>Ver ejemplo de plantilla CSV</summary>
+      <pre>tabla,atributo,tipo,llave,dependencia_funcional
+Clientes,IdCliente,INT,PK,IdCliente->Nombre,Email
+Clientes,Nombre,VARCHAR(100),,
+Clientes,Email,VARCHAR(100),,
+Ordenes,IdOrden,INT,PK,IdOrden->Fecha,IdCliente
+Ordenes,Fecha,DATE,,
+Ordenes,IdCliente,INT,FK,
+DetalleOrden,IdOrden,INT,PK(part);FK,
+DetalleOrden,IdArticulo,INT,PK(part);FK,
+DetalleOrden,Cantidad,INT,,IdOrden,IdArticulo->Cantidad</pre>
+    </details>
+  </div>
 
-            <!-- Análisis de normalización -->
-            {% if resultado_1fn %}
-            <div class="analysis-card alert alert-1fn fade-in">
-                <div class="analysis-title">
-                    <i class="fas fa-search-plus"></i>
-                    Análisis Primera Forma Normal (1FN)
-                </div>
-                <div>{{ resultado_1fn }}</div>
-            </div>
-            {% endif %}
-
-            {% if resultado_2fn %}
-            <div class="analysis-card alert alert-2fn fade-in">
-                <div class="analysis-title">
-                    <i class="fas fa-layer-group"></i>
-                    Análisis Segunda Forma Normal (2FN)
-                </div>
-                <ul class="analysis-list">
-                    {% for msg in resultado_2fn %}
-                        <li>{{ msg }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-
-            {% if resultado_3fn %}
-            <div class="analysis-card alert alert-3fn fade-in">
-                <div class="analysis-title">
-                    <i class="fas fa-check-circle"></i>
-                    Análisis Tercera Forma Normal (3FN)
-                </div>
-                <ul class="analysis-list">
-                    {% for msg in resultado_3fn %}
-                        <li>{{ msg }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
+  <!-- PASO 2 -->
+  <div class="card">
+    <h2>2) Conexión a SQL Server</h2>
+    <p>Conéctate a tu instancia (Windows Auth o SQL Auth) para leer tablas reales y correr 1FN/2FN/3FN.</p>
+    <div class="row">
+      <a class="btn" href="{{ url_for('conectar_sql') }}">Abrir formulario de conexión</a>
+      {% if has_conn %}
+        <span class="badge ok">Conexión guardada</span>
+      {% else %}
+        <span class="badge bad">Sin conexión</span>
+      {% endif %}
     </div>
+    {% if saved and saved.server %}
+      <p style="margin-top:8px"><small>Última conexión: <code>{{ saved.driver }}</code> → <code>{{ saved.server }}</code> / BD <code>{{ saved.database }}</code></small></p>
+    {% endif %}
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Animación de carga
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            const button = this.querySelector('.btn-upload');
-            button.classList.add('loading');
-            button.disabled = true;
-        });
-
-        // Validación de archivos
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        fileInputs.forEach(input => {
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file && !file.name.toLowerCase().endsWith('.csv')) {
-                    alert('Por favor, selecciona un archivo CSV válido.');
-                    e.target.value = '';
-                }
-            });
-        });
-
-        // Efectos visuales mejorados
-        document.addEventListener('DOMContentLoaded', function() {
-            // Observador para animaciones de entrada
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            });
-
-            // Aplicar observador a elementos con animación
-            document.querySelectorAll('.fade-in').forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(el);
-            });
-        });
-    </script>
+  <!-- PASO 3 -->
+  <div class="card">
+    <h2>3) Analizar normalización (1FN / 2FN / 3FN)</h2>
+    <p>Requiere estructura cargada y conexión activa.</p>
+    <a class="btn" href="{{ url_for('analizar') }}" {% if not (has_csv and has_conn) %}disabled{% endif %}>Ir al analizador</a>
+    {% if not has_csv or not has_conn %}
+      <p style="margin-top:8px"><small>Completa los pasos anteriores para habilitar el análisis.</small></p>
+    {% endif %}
+  </div>
 </body>
 </html>
