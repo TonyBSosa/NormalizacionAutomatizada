@@ -1,7 +1,0 @@
-﻿Tabla,Atributo,Tipo,Llave
-Clientes,Id_Cliente,INT,PK
-Clientes,Nombre,VARCHAR(100),
-Clientes,Email,VARCHAR(100),
-Ordenes,Id_Orden,INT,PK
-Ordenes,Fecha,DATE,
-Ordenes,Id_Cliente,INT,FK(Clientes.Id_Cliente)

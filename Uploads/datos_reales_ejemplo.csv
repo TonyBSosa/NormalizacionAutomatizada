@@ -1,3 +1,0 @@
-IdCliente,Nombre,Email,IdOrden,Fecha,IdArticulo,NombreArt,Precio,Cantidad
-1,Carlos,carlos@example.com,101,2023-01-10,1001,Teclado,29.99,2
-2,Ana,ana@example.com,102,2023-01-12,1002,Mouse,19.5,1

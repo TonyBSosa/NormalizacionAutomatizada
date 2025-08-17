@@ -1,0 +1,14 @@
+# entornos y cachés
+venv/
+.env
+__pycache__/
+*.py[cod]
+*.pyo
+
+# config de editor
+.vscode/
+.idea/
+
+# sistemas
+.DS_Store
+Thumbs.db
