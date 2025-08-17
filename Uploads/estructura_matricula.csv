@@ -1,5 +1,0 @@
-tabla,atributo,tipo,llave
-Matricula,IdEstudiante,INT,PK
-Matricula,IdCurso,INT,PK
-Matricula,NombreEstudiante,NVARCHAR(100),
-Matricula,Nota,"DECIMAL(5,2)",

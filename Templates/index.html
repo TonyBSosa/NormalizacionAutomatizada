@@ -12,10 +12,9 @@
     :root{ --grad:linear-gradient(135deg,#6366f1 0%,#7c3aed 100%); }
     body{ min-height:100vh; background:linear-gradient(135deg,#f6f7fb 0,#dfe6f2 100%); }
     .card-glass{ background:rgba(255,255,255,.92); border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 18px 40px rgba(0,0,0,.08);}
-    .title{ background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:800;}
+    .title{ background:var(--grad); -webkit-background-clip:text; color:transparent; font-weight:800;}
     .table thead th{ background:var(--grad); color:#fff; border:none;}
     pre{ background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1rem; }
-    /* Picker flotante */
     .picker-wrap{ position:relative; }
     .picker-panel{
       position:absolute; top:100%; left:0; right:0; z-index:1080;
@@ -33,7 +32,6 @@
     </div>
 
     <div class="card-glass p-3 p-md-4">
-      <!-- ====== Tabs ====== -->
       <ul class="nav nav-pills mb-3" id="tabs" role="tablist">
         <li class="nav-item">
           <button class="nav-link" data-bs-toggle="pill" data-bs-target="#csv-pane" type="button">
@@ -68,26 +66,13 @@
           </form>
         </div>
 
-        <!-- SQL -->
+        <!-- SQL (autoconexión, sin servidor) -->
         <div class="tab-pane fade show active" id="sql-pane">
           <form method="POST" id="sqlForm">
             <input type="hidden" name="source" value="sql" />
-            <!-- oculto pero necesario para backend -->
             <input type="hidden" name="sql_schema" value="dbo" />
-
             <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Servidor</label>
-                <div class="input-group">
-                  <input type="text" name="sql_server" class="form-control" placeholder="Ej: OWEN o localhost\SQLEXPRESS">
-                  <button class="btn btn-outline-secondary" type="button" id="btnProbe">
-                    <i class="fa-wand-magic-sparkles fa-solid me-1"></i>Autodetectar
-                  </button>
-                </div>
-                <div class="form-text">Puedes dejarlo vacío y usar Autodetectar.</div>
-              </div>
-
-              <div class="col-md-4 picker-wrap">
+              <div class="col-md-6 picker-wrap">
                 <label class="form-label fw-semibold">Base de datos</label>
                 <input type="text" name="sql_db" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
                 <div id="dbPicker" class="picker-panel">
@@ -95,8 +80,7 @@
                   <div id="dbList" class="list-group list-group-flush"></div>
                 </div>
               </div>
-
-              <div class="col-md-4 picker-wrap">
+              <div class="col-md-6 picker-wrap">
                 <label class="form-label fw-semibold">Tabla</label>
                 <input type="text" name="sql_table" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
                 <div id="tblPicker" class="picker-panel">
@@ -105,7 +89,6 @@
                 </div>
               </div>
             </div>
-
             <div class="text-center mt-4">
               <button class="btn btn-primary px-4"><i class="fa-solid fa-play me-2"></i>Conectar y Normalizar</button>
             </div>
@@ -133,14 +116,10 @@
     <div class="alert alert-info mt-3">{{ resultado_1fn }}</div>
     {% endif %}
     {% if resultado_2fn %}
-    <div class="alert alert-warning mt-2">
-      <ul class="mb-0">{% for m in resultado_2fn %}<li>{{ m }}</li>{% endfor %}</ul>
-    </div>
+    <div class="alert alert-warning mt-2"><ul class="mb-0">{% for m in resultado_2fn %}<li>{{ m }}</li>{% endfor %}</ul></div>
     {% endif %}
     {% if resultado_3fn %}
-    <div class="alert alert-success mt-2">
-      <ul class="mb-0">{% for m in resultado_3fn %}<li>{{ m }}</li>{% endfor %}</ul>
-    </div>
+    <div class="alert alert-success mt-2"><ul class="mb-0">{% for m in resultado_3fn %}<li>{{ m }}</li>{% endfor %}</ul></div>
     {% endif %}
 
     {% if resumen_acciones %}
@@ -183,10 +162,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // ====== Helpers ======
-    const $ = s => document.querySelector(s);
-    const val = n => $(`[name="${n}"]`)?.value?.trim() || "";
-    let lastServer = ""; // guardamos el server detectado/usable
+    // ===== Helpers =====
+    const $ = (s) => document.querySelector(s);
+    const val = (n) => document.querySelector(`[name="${n}"]`)?.value?.trim() || "";
 
     async function postJSON(url, data){
       const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
@@ -195,114 +173,114 @@
       return j;
     }
 
-    // ====== Pickers ======
+    // ===== Pickers =====
     function hidePickers(){ $('#dbPicker')?.classList.remove('show'); $('#tblPicker')?.classList.remove('show'); }
-    document.addEventListener('click', (e)=>{
-      if(!e.target.closest('.picker-wrap')) hidePickers();
-    });
+    document.addEventListener('click', (e)=>{ if(!e.target.closest('.picker-wrap')) hidePickers(); });
 
-    // Render DB list
     function renderDbList(dbs){
       const c = $('#dbList'); c.innerHTML = '';
       if(!dbs?.length){ c.innerHTML = '<div class="p-2 text-muted">No hay bases disponibles</div>'; return; }
-      dbs.forEach(db=>{
+      dbs.forEach((db)=>{
         const a = document.createElement('button');
         a.type = 'button';
         a.className = 'list-group-item list-group-item-action';
         a.textContent = db;
         a.addEventListener('click', ()=>{
-          $('[name="sql_db"]').value = db;
-          $('[name="sql_table"]').value = '';
+          document.querySelector('[name="sql_db"]').value = db;
+          document.querySelector('[name="sql_table"]').value = '';
           hidePickers();
         });
         c.appendChild(a);
       });
     }
 
-    // Render tables accordion
     function renderTablesTree(grouped){
       const el = $('#tablesTree'); el.innerHTML = '';
       const schemas = Object.keys(grouped||{});
       if(!schemas.length){ el.innerHTML = '<div class="p-2 text-muted">No se encontraron tablas.</div>'; return; }
+
+      let html = '';
       schemas.forEach((schema, i)=>{
-        const pane = `
+        html += `
           <div class="accordion-item">
             <h2 class="accordion-header" id="h${i}">
-              <button class="accordion-button ${i?'collapsed':''}" type="button" data-bs-toggle="collapse" data-bs-target="#c${i}">
+              <button class="accordion-button ${i ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#c${i}">
                 <i class="fa-solid fa-folder-tree me-2"></i>${schema}
               </button>
             </h2>
-            <div id="c${i}" class="accordion-collapse collapse ${i?'':'show'}">
+            <div id="c${i}" class="accordion-collapse collapse ${i ? '' : 'show'}">
               <div class="accordion-body p-0">
-                <ul class="list-group list-group-flush">
-                  ${(grouped[schema]||[]).map(t=>`
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                      <span>${schema}.${t}</span>
-                      <button type="button" class="btn btn-sm btn-outline-success pick" data-schema="${schema}" data-table="${t}">
-                        <i class="fa-solid fa-hand-pointer me-1"></i>Seleccionar
-                      </button>
-                    </li>
-                  `).join('')}
+                <ul class="list-group list-group-flush">`;
+
+        const tables = grouped[schema] || [];
+        for(const t of tables){
+          html += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>${schema}.${t}</span>
+              <button type="button" class="btn btn-sm btn-outline-success pick" data-schema="${schema}" data-table="${t}">
+                <i class="fa-solid fa-hand-pointer me-1"></i>Seleccionar
+              </button>
+            </li>`;
+        }
+
+        html += `
                 </ul>
               </div>
             </div>
           </div>`;
-        el.insertAdjacentHTML('beforeend', pane);
       });
-      // clicks
-      el.querySelectorAll('.pick').forEach(b=>{
+
+      el.innerHTML = html;
+
+      el.querySelectorAll('.pick').forEach((b)=>{
         b.addEventListener('click', ()=>{
-          const s=b.getAttribute('data-schema'), t=b.getAttribute('data-table');
-          $('[name="sql_schema"]').value = s;
-          $('[name="sql_table"]').value = t;
+          const s = b.getAttribute('data-schema');
+          const t = b.getAttribute('data-table');
+          document.querySelector('[name="sql_schema"]').value = s;
+          document.querySelector('[name="sql_table"]').value = t;
           hidePickers();
         });
       });
     }
 
-    // ====== Actions ======
-    // Autodetectar servidor y poblar DBs
-    async function probeAndShowDBs(){
+    // ===== Acciones (autoconexión) =====
+    async function openDbPicker(){
       try{
-        const payload = { server: val('sql_server') || null };
-        const res = await postJSON('/api/sql/probe', payload);
-        lastServer = res.server || val('sql_server') || '';
+        const res = await postJSON('/api/sql/probe', {});
         renderDbList(res.databases || []);
         $('#dbPicker').classList.add('show');
       }catch(err){
+        console.error('probe failed:', err);
         alert('No se pudo obtener las bases de datos.\n' + err.message);
       }
     }
 
-    // Listar tablas al abrir picker de tablas
-    async function loadTablesAndShow(){
+    async function openTablesPicker(){
       const db = val('sql_db');
       if(!db){ $('#dbPicker').classList.add('show'); return; }
       try{
-        const payload = { server: lastServer || val('sql_server') || null, database: db };
-        const res = await postJSON('/api/sql/tables', payload);
-        if(res.server) lastServer = res.server;
+        const res = await postJSON('/api/sql/tables', { database: db });
         renderTablesTree(res.schemas || {});
         $('#tblPicker').classList.add('show');
       }catch(err){
+        console.error('tables failed:', err);
         alert('No se pudieron listar las tablas.\n' + err.message);
       }
     }
 
     // Eventos
-    $('#btnProbe')?.addEventListener('click', probeAndShowDBs);
-    $('[name="sql_db"]')?.addEventListener('click', probeAndShowDBs);
-    $('[name="sql_table"]')?.addEventListener('click', loadTablesAndShow);
+    document.querySelector('[name="sql_db"]')?.addEventListener('click', openDbPicker);
+    document.querySelector('[name="sql_table"]')?.addEventListener('click', openTablesPicker);
 
-    // Copiar/Descargar SQL
-    $('#copySql')?.addEventListener('click', async ()=>{
-      const t = $('#sqlBox')?.innerText || '';
+    // Copiar / Descargar SQL
+    document.getElementById('copySql')?.addEventListener('click', async ()=>{
+      const t = document.getElementById('sqlBox')?.innerText || '';
       if(!t) return;
       await navigator.clipboard.writeText(t);
       alert('Script SQL copiado.');
     });
-    $('#dlSql')?.addEventListener('click', ()=>{
-      const t = $('#sqlBox')?.innerText || '';
+    document.getElementById('dlSql')?.addEventListener('click', ()=>{
+      const t = document.getElementById('sqlBox')?.innerText || '';
       if(!t) return;
       const blob = new Blob([t], {type:'text/sql;charset=utf-8'});
       const url = URL.createObjectURL(blob);
@@ -311,18 +289,18 @@
       a.click(); URL.revokeObjectURL(url); a.remove();
     });
 
-    // Validación simple en submit SQL
-    $('#sqlForm')?.addEventListener('submit', (e)=>{
+    // Validación submit
+    document.getElementById('sqlForm')?.addEventListener('submit', (e)=>{
       if(!val('sql_db') || !val('sql_table')){
         e.preventDefault();
         alert('Selecciona Base de datos y Tabla.');
       }
     });
 
-    // Validación CSV (solo CSV)
-    document.querySelectorAll('input[type="file"]').forEach(inp=>{
-      inp.addEventListener('change', e=>{
-        const f=e.target.files[0];
+    // Validación CSV
+    document.querySelectorAll('input[type="file"]').forEach((inp)=>{
+      inp.addEventListener('change', (e)=>{
+        const f = e.target.files[0];
         if(f && !f.name.toLowerCase().endsWith('.csv')) e.target.value='';
       });
     });

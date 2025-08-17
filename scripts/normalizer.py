@@ -55,7 +55,7 @@ def detect_tables(estructura_df: pd.DataFrame):
         fk_rows = chunk[chunk['llave'].str.contains('FK', case=False, na=False)]
         for _, row in fk_rows.iterrows():
             # Formatos: "FK:Clientes(idCliente)" o "FK Clientes(idCliente)"
-            m = re.search(r'FK\s*:?\s*([A-Za-z0-9_]+)\s*\(\s*([A-Za-z0-9_]+)\s*\)', str(row['llave']))
+            m = re.search(r'FK\s*:?\s*([A-Za-z0-9_\.]+)\s*\(\s*([A-Za-z0-9_]+)\s*\)', str(row['llave']))
             if m:
                 fks_map.append((row['atributo'], m.group(1), m.group(2)))
 
@@ -73,13 +73,30 @@ def proper_subsets(pk):
 
 def depends_on(df: pd.DataFrame, determinant_cols, target):
     """
-    Heurística: target depende funcionalmente de determinant_cols si por cada combinación
-    de determinant_cols solo hay un valor de target.
+    Heurística: target depende funcionalmente de determinant_cols si, ignorando NaNs,
+    por cada combinación de determinant_cols solo hay un valor de target y existe
+    *algo* de soporte (al menos un determinante repetido o grupo con >=2 filas).
     """
-    if any(col not in df.columns for col in determinant_cols + [target]):
+    needed = list(determinant_cols) + [target]
+    if any(col not in df.columns for col in needed):
         return False
-    g = df.groupby(determinant_cols)[target].nunique(dropna=False)
-    return (g.max() == 1)
+
+    # Filtra filas con NaN en determinantes o target
+    df2 = df.dropna(subset=determinant_cols)
+    df2 = df2[df2[target].notna()]
+    if df2.empty:
+        return False
+
+    grp = df2.groupby(determinant_cols)
+    nunq = grp[target].nunique(dropna=True)
+    sizes = grp.size()
+
+    # Condición de dependencia (cada grupo tiene un único target)
+    unique_per_group = (nunq.max() == 1)
+    # Soporte: existe al menos un grupo con tamaño >= 2 (evita "depende" por datos escasos)
+    has_support = (sizes.max() >= 2)
+
+    return bool(unique_per_group and has_support)
 
 
 def normalize_1NF(table_name, meta, df):
@@ -93,12 +110,18 @@ def normalize_1NF(table_name, meta, df):
 
     base_cols = [c for c in meta['attrs'] if c in df.columns]
     base_df = df[base_cols].copy()
+    # NO mezclar basura: elimina filas completamente vacías en el subset de columnas
+    base_df = base_df.dropna(how="all")
 
     # Detectar multivaluados
     multival_cols = []
     for col in base_cols:
-        if base_df[col].apply(lambda x: len(split_multivalue(x))).max() > 1:
-            multival_cols.append(col)
+        try:
+            if base_df[col].apply(lambda x: len(split_multivalue(x))).max() > 1:
+                multival_cols.append(col)
+        except Exception:
+            # Columnas no-string con tipos raros: ignora
+            pass
 
     # Construye tablas hijas
     for mv in multival_cols:
@@ -114,7 +137,7 @@ def normalize_1NF(table_name, meta, df):
                 new_row = {pk: r.get(pk) for pk in pk_cols}
                 new_row[mv] = _clean_value(v)
                 expanded_rows.append(new_row)
-        child_df = pd.DataFrame(expanded_rows).drop_duplicates()
+        child_df = pd.DataFrame(expanded_rows).dropna(how="all").drop_duplicates()
 
         # tipos
         types = {}
@@ -132,7 +155,7 @@ def normalize_1NF(table_name, meta, df):
         result_tables[child_name] = child_df
 
     # Quitar columnas multivaluadas de la base
-    base_df = base_df.drop(columns=multival_cols, errors='ignore').drop_duplicates()
+    base_df = base_df.drop(columns=multival_cols, errors='ignore').dropna(how="all").drop_duplicates()
 
     # Si no había PK y se generó {tabla}_id_auto, lo trasladamos a base
     if len(meta['pk']) == 0 and f"{table_name}_id_auto" in base_df.columns:
@@ -294,14 +317,30 @@ def map_sql_type(t: str):
     return "NVARCHAR(255)"
 
 
+def _safe_id(name: str) -> str:
+    """
+    Convierte el nombre en un identificador seguro para Mermaid ER:
+    - Reemplaza cualquier cosa que no sea [A-Za-z0-9_] por "_"
+    - Evita empezar por número anteponiendo "_"
+    """
+    sid = re.sub(r'[^A-Za-z0-9_]', '_', str(name))
+    if re.match(r'^[0-9]', sid):
+        sid = '_' + sid
+    return sid
+
+
 def generate_mermaid(schema):
     """
-    ER con Mermaid (client-side). Relación simple para cada FK.
+    ER con Mermaid (client-side). Usa IDs seguros para entidades y corrige la sintaxis de relaciones.
     """
+    idmap = {t: _safe_id(t) for t in schema.keys()}
+
     lines = ["erDiagram"]
+
     # entidades
     for t, meta in schema.items():
-        lines.append(f"  {t} {{")
+        tid = idmap[t]
+        lines.append(f"  {tid} {{")
         for col in meta['attrs']:
             typ = meta['types'].get(col, 'NVARCHAR(255)').lower()
             if "int" in typ:
@@ -319,11 +358,14 @@ def generate_mermaid(schema):
 
     # relaciones
     for t, meta in schema.items():
+        t_id = idmap[t]
         for (fk_col, ref_table, ref_col) in meta.get('fks', []):
-            # }o--||  (FK lado muchos/0-1 hacia lado 1 obligatorio)
-            lines.append(
-                f'  {t} }}o--|| {ref_table} : "{fk_col}->{ref_table}.{ref_col}"'
-            )
+            if ref_table not in idmap:
+                continue
+            r_id = idmap[ref_table]
+            label = f'{fk_col}->{ref_table}.{ref_col}'
+            # En f-strings, '}}' => '}' literal. Mermaid verá }o--|| (correcto).
+            lines.append(f'  {t_id} }}o--|| {r_id} : "{label}"')
 
     return "\n".join(lines)
 
@@ -384,12 +426,18 @@ def normalizar_pipeline(estructura_df: pd.DataFrame, datos_df: pd.DataFrame):
     tablas_data = {}
     resumen_acciones = {}
 
-    # Si 'datos_df' contiene columnas de múltiples tablas, extraemos por tabla.
+    # Si 'datos_df' contiene columnas de múltiples tablas, extraemos por tabla
     for t, meta in base_tables.items():
         cols = [c for c in meta['attrs'] if c in datos_df.columns]
         if not cols:
             continue
-        df_t = datos_df[cols].copy()
+
+        # 🔧 CLAVE: si existe columna '__tabla', filtra filas de esa tabla
+        if "__tabla" in datos_df.columns:
+            mask = datos_df["__tabla"].astype(str).str.strip() == str(t)
+            df_t = datos_df.loc[mask, cols].copy()
+        else:
+            df_t = datos_df[cols].copy()
 
         # 1FN
         s1, td1, mv_cols = normalize_1NF(t, meta, df_t)

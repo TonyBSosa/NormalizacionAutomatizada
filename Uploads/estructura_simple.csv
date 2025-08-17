@@ -1,7 +1,0 @@
-tabla,atributo,tipo,llave
-Cliente,ClienteID,INT,PK
-Cliente,Nombre,NVARCHAR(100),
-Cliente,Correo,NVARCHAR(100),
-Pedido,PedidoID,INT,PK
-Pedido,Fecha,DATE,
-Pedido,ClienteID,INT,FK:Cliente(ClienteID)

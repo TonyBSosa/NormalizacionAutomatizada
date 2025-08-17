@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
@@ -84,7 +83,7 @@ def verificar_3FN(datos_df: pd.DataFrame, estructura_df: pd.DataFrame | None = N
         if counts.empty or counts.max() < 2:
             continue
         for target in non_keys:
-            if target == det: 
+            if target == det:
                 continue
             try:
                 g = datos_df.groupby(det)[target].nunique(dropna=True)
@@ -128,23 +127,19 @@ def index():
                     datos_df = pd.read_csv(p)
 
             elif source == 'sql':
-                server = request.form.get('sql_server') or None
+                # CONEXIÓN 100% AUTOMÁTICA (sin servidor en UI)
                 database = request.form.get('sql_db') or None
-                schema_name = request.form.get('sql_schema') or 'dbo'  # oculto en UI, pero necesario
+                schema_name = request.form.get('sql_schema') or 'dbo'
                 table = request.form.get('sql_table') or None
 
                 conn = None
                 try:
-                    if server:
-                        conn = connect_sql_server(server=server, database=database)
-                        conn.cursor().execute("SELECT 1;").fetchone()
-                    else:
-                        conn, server = safe_connect_autodetect(database=database)
+                    conn, _used_server = safe_connect_autodetect(database=database)
                     if conn is None:
-                        raise RuntimeError("No se pudo establecer conexión con SQL Server.")
-
+                        raise RuntimeError("No se pudo establecer conexión automática con SQL Server.")
                     if not (database and table):
                         raise ValueError("Selecciona Base de datos y Tabla.")
+
                     datos_df = fetch_table_df(conn, schema_name, table)
                     estructura_df = get_table_structure_df(conn, schema_name, table)
                 finally:
@@ -196,26 +191,15 @@ def index():
         return f"Error en la aplicación: {e}", 500
 
 
-# ===== API: Autodetectar y listar bases =====
+# ===== API: Autodetectar y listar bases (sin servidor) =====
 @app.post("/api/sql/probe")
 def api_sql_probe():
     try:
         payload = request.get_json(silent=True) or {}
-        server = payload.get("server")
-        database = payload.get("database")  # opcional
-        conn = None; used = None
+        database = payload.get("database")  # opcional; normalmente None aquí
 
-        if server:
-            try:
-                conn = connect_sql_server(server=server, database=database)
-                conn.cursor().execute("SELECT 1;").fetchone()
-                used = server
-            except Exception:
-                conn = None
-
-        if conn is None:
-            conn, used = safe_connect_autodetect(database=database)
-
+        # Conexión automática
+        conn, used = safe_connect_autodetect(database=database)
         if conn is None:
             return jsonify({"ok": False, "error": "No fue posible conectar automáticamente."}), 400
 
@@ -230,26 +214,23 @@ def api_sql_probe():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
-# ===== API: Listar tablas por esquema =====
+# ===== API: Listar tablas por esquema (sin servidor) =====
 @app.post("/api/sql/tables")
 def api_sql_tables():
     try:
         payload = request.get_json(silent=True) or {}
-        server = payload.get("server")
         database = payload.get("database")
         if not database:
             return jsonify({"ok": False, "error": "Falta 'database'."}), 400
 
-        if server:
-            conn = connect_sql_server(server=server, database=database)
-        else:
-            conn, server = safe_connect_autodetect(database=database)
+        # Conexión automática
+        conn, used_server = safe_connect_autodetect(database=database)
         if conn is None:
             return jsonify({"ok": False, "error": "No se pudo conectar."}), 400
 
         try:
             grouped = list_tables_grouped(conn)
-            return jsonify({"ok": True, "server": server, "schemas": grouped})
+            return jsonify({"ok": True, "server": used_server, "schemas": grouped})
         finally:
             try: conn.close()
             except Exception: pass

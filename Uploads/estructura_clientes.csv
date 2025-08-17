@@ -1,5 +1,0 @@
-tabla,atributo,tipo,llave
-Clientes,IdCliente,INT,PK
-Clientes,Nombre,NVARCHAR(100),
-Clientes,Telefonos,NVARCHAR(200),
-Clientes,Direccion,NVARCHAR(200),
