@@ -1,0 +1,6 @@
+﻿OrderID,OrderDate,CustomerID,CustomerName,Product1,ProductName1,Qty1,Price1,Product2,ProductName2,Qty2,Price2,Product3,ProductName3,Qty3,Price3
+1001,2025-07-15,C001,Ana López,P10,Teclado,1,350.0,P20,Mouse,2,150.0,,,,
+1002,2025-07-16,C002,Carlos Pérez,P30,"Monitor 24""",1,3800.0,,,,,,,,
+1003,2025-07-16,C001,Ana López,P10,Teclado,1,340.0,P40,USB-C Hub,1,500.0,P50,Alfombrilla,1,120.0
+1004,2025-07-17,C003,María Gómez,P60,SSD 1TB,2,2300.0,P30,"Monitor 24""",1,3650.0,,,,
+1005,2025-07-18,C004,Luis Reyes,P70,Laptop Stand,1,900.0,P20,Mouse,1,160.0,,,,

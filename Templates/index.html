@@ -1,355 +1,386 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="light">
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Normalización — Análisis FN</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-  <script>mermaid.initialize({ startOnLoad:true, securityLevel:"loose" });</script>
-  <style>
-    :root{ --grad:linear-gradient(135deg,#6366f1 0%,#7c3aed 100%); }
-    body{ min-height:100vh; background:linear-gradient(135deg,#f6f7fb 0,#dfe6f2 100%); }
-    .card-glass{ background:rgba(255,255,255,.92); border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 18px 40px rgba(0,0,0,.08);}
-    .title { background:var(--grad); -webkit-background-clip:text; color:transparent; font-weight:800;}
-    .table thead th{ background:var(--grad); color:#fff; border:none;}
-    pre{ background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1rem; }
-    .picker-wrap{ position:relative; }
-    .picker-panel{
-      position:absolute; top:100%; left:0; right:0; z-index:1080;
-      display:none; background:#fff; border:1px solid rgba(0,0,0,.08);
-      border-radius:12px; box-shadow:0 14px 28px rgba(0,0,0,.15);
-      max-height:280px; overflow:auto; margin-top:.25rem;
-    }
-    .picker-panel.show{ display:block; }
-    .hint { font-size:.85rem; color:#6c757d; }
-    .lead{ font-size: 1rem; color:#252526;  text-align: center;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normalización - Análisis FN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px dashed #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+        }
+
+        .btn-upload {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .data-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background: var(--primary-gradient);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            border-color: #f8f9fa;
+        }
+
+        .analysis-card {
+            border-radius: 15px;
+            border: none;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .alert-1fn {
+            background: var(--info-gradient);
+            color: #0c5460;
+            border: none;
+        }
+
+        .alert-2fn {
+            background: var(--warning-gradient);
+            color: #842029;
+            border: none;
+        }
+
+        .alert-3fn {
+            background: var(--success-gradient);
+            color: #0f5132;
+            border: none;
+        }
+
+        .analysis-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analysis-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .analysis-list li {
+            background: rgba(255, 255, 255, 0.3);
+            margin-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            position: relative;
+            padding-left: 2.5rem;
+        }
+
+        .analysis-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 1rem;
+            color: inherit;
+            font-weight: bold;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .loading .btn-text {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h1 class="h3 title"><i class="fa-solid fa-database me-2"></i> Análisis de Normalización</h1>
-    </div>  
-    <div class="container py-4"></div>
-      <p class="lead">
-                <strong>Administración de Bases de Datos 2 – Grupo #4</strong><br>
-                Proyecto del Primer Parcial
-            </p>
-    </div>
+    <div class="container">
+        <div class="main-container">
+            <h1 class="page-title">
+                <i class="fas fa-database"></i> Análisis de Normalización
+            </h1>
 
-    <div class="card-glass p-3 p-md-4">
-      <ul class="nav nav-pills mb-3" id="tabs" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#csv-pane" type="button">
-            <i class="fa-solid fa-file-csv me-2"></i>Archivos CSV
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#sql-pane" type="button">
-            <i class="fa-solid fa-server me-2"></i>SQL Server
-          </button>
-        </li>
-      </ul>
-
-      <div class="tab-content">
-        <!-- CSV -->
-        <div class="tab-pane fade" id="csv-pane">
-          <form method="POST" enctype="multipart/form-data" id="uploadForm">
-            <input type="hidden" name="source" value="csv" />
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold"><i class="fa-solid fa-table me-2"></i>Estructura (CSV)</label>
-                <input type="file" name="estructura" accept=".csv" class="form-control" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold"><i class="fa-solid fa-file-csv me-2"></i>Datos (CSV)</label>
-                <input type="file" name="datos" accept=".csv" class="form-control" required>
-              </div>
+            <!-- Sección de carga de archivos -->
+            <div class="upload-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    Cargar Archivos de Datos
+                </h2>
+                
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="estructura" class="form-label fw-semibold">
+                                    <i class="fas fa-table me-2"></i>Estructura (CSV)
+                                </label>
+                                <input type="file" name="estructura" id="estructura" 
+                                       accept=".csv" class="form-control" required>
+                                <div class="form-text">Archivo con la estructura de la tabla</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="datos" class="form-label fw-semibold">
+                                    <i class="fas fa-file-csv me-2"></i>Datos Reales (CSV)
+                                </label>
+                                <input type="file" name="datos" id="datos" 
+                                       accept=".csv" class="form-control" required>
+                                <div class="form-text">Archivo con los datos a analizar</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-upload btn-lg">
+                            <span class="btn-text">
+                                <i class="fas fa-upload me-2"></i>Analizar Archivos
+                            </span>
+                            <span class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Procesando...
+                            </span>
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="text-center mt-4">
-              <button class="btn btn-primary px-4"><i class="fa-solid fa-upload me-2"></i>Analizar archivos</button>
-            </div>
-          </form>
-        </div>
 
-        <!-- SQL con campo Servidor opcional -->
-        <div class="tab-pane fade show active" id="sql-pane">
-          <form method="POST" id="sqlForm">
-            <input type="hidden" name="source" value="sql" />
-            <input type="hidden" name="sql_schema" value="dbo" />
-            <div class="row g-3">
-              <!-- NUEVO: input de servidor -->
-
-              <div class="col-md-12">
-          <label class="form-label fw-semibold">Servidor (opcional)</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-computer"></i></span>
-            <input
-              type="text"
-              name="sql_server"
-              class="form-control"
-              placeholder="Ej: MI-PC\\SQLEXPRESS o localhost"
-              autocomplete="off">
-            <button type="button" id="btnProbeServer" class="btn btn-outline-secondary">
-              <i class="fa-solid fa-plug-circle-bolt me-1"></i>Probar servidor y listar bases
-            </button>
-          </div>
-          <div class="hint mt-1">
-            Déjalo vacío para <b>autodetección</b>. Ingresa <code>HOST\INSTANCIA</code> si tu SQL no es local o está en una instancia nombrada.
-          </div>
-          <div id="serverProbe" class="hint mt-1"></div>
-        </div>
-
-
-              <div class="col-md-6 picker-wrap">
-                <label class="form-label fw-semibold">Base de datos</label>
-                <input type="text" name="sql_db" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
-                <div id="dbPicker" class="picker-panel">
-                  <div class="p-2 text-muted small"><i class="fa-regular fa-circle-dot me-1"></i>Selecciona una base</div>
-                  <div id="dbList" class="list-group list-group-flush"></div>
+            <!-- Sección de estructura -->
+            {% if estructura %}
+            <div class="data-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-table text-primary"></i>
+                    Estructura de la Tabla
+                </h3>
+                <div class="table-responsive">
+                    {{ estructura | safe }}
                 </div>
-              </div>
+            </div>
+            {% endif %}
 
-              <div class="col-md-6 picker-wrap">
-                <label class="form-label fw-semibold">Tabla</label>
-                <input type="text" name="sql_table" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
-                <div id="tblPicker" class="picker-panel">
-                  <div class="p-2 text-muted small"><i class="fa-solid fa-diagram-project me-1"></i>Esquemas y tablas</div>
-                  <div id="tablesTree" class="accordion"></div>
+            <!-- Sección de datos -->
+            {% if datos %}
+            <div class="data-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-database text-success"></i>
+                    Datos Reales
+                </h3>
+                <div class="table-responsive">
+                    {{ datos | safe }}
                 </div>
-              </div>
             </div>
+            {% endif %}
 
-            <div class="text-center mt-4">
-              <button class="btn btn-primary px-4"><i class="fa-solid fa-play me-2"></i>Conectar y Normalizar</button>
+            <!-- Análisis de normalización -->
+            {% if resultado_1fn %}
+            <div class="analysis-card alert alert-1fn fade-in">
+                <div class="analysis-title">
+                    <i class="fas fa-search-plus"></i>
+                    Análisis Primera Forma Normal (1FN)
+                </div>
+                <div>{{ resultado_1fn }}</div>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            {% endif %}
 
-    <!-- ===== Resultados ===== -->
-    {% if estructura %}
-    <div class="card-glass p-3 p-md-4 mt-4">
-      <h5 class="mb-2"><i class="fa-solid fa-table text-primary me-2"></i>Estructura</h5>
-      <div class="table-responsive">{{ estructura | safe }}</div>
-    </div>
-    {% endif %}
-
-    {% if datos %}
-    <div class="card-glass p-3 p-md-4 mt-3">
-      <h5 class="mb-2"><i class="fa-solid fa-database text-success me-2"></i>Datos</h5>
-      <div class="table-responsive">{{ datos | safe }}</div>
-    </div>
-    {% endif %}
-
-    {% if resultado_1fn %}
-    <div class="alert alert-info mt-3">{{ resultado_1fn }}</div>
-    {% endif %}
-    {% if resultado_2fn %}
-    <div class="alert alert-warning mt-2"><ul class="mb-0">{% for m in resultado_2fn %}<li>{{ m }}</li>{% endfor %}</ul></div>
-    {% endif %}
-    {% if resultado_3fn %}
-    <div class="alert alert-success mt-2"><ul class="mb-0">{% for m in resultado_3fn %}<li>{{ m }}</li>{% endfor %}</ul></div>
-    {% endif %}
-
-    {% if resumen_acciones %}
-    <div class="card-glass p-3 p-md-4 mt-3">
-      <h5 class="mb-2"><i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Transformaciones</h5>
-      <pre class="mb-0" style="white-space:pre-wrap">{{ resumen_acciones | tojson(indent=2) }}</pre>
-    </div>
-    {% endif %}
-
-    {% if diagram_mermaid %}
-    <div class="card-glass p-3 p-md-4 mt-3">
-      <h5 class="mb-2"><i class="fa-solid fa-diagram-project text-info me-2"></i>Diagrama ER</h5>
-      <pre class="mermaid">{{ diagram_mermaid }}</pre>
-    </div>
-    {% endif %}
-
-    {% if sql_script %}
-    <div class="card-glass p-3 p-md-4 mt-3">
-      <h5 class="mb-2"><i class="fa-solid fa-code text-primary me-2"></i>Script SQL Server</h5>
-      <div class="d-flex gap-2 mb-2">
-        <button class="btn btn-outline-primary btn-sm" id="copySql"><i class="fa-regular fa-copy me-1"></i>Copiar</button>
-        <button class="btn btn-outline-success btn-sm" id="dlSql"><i class="fa-solid fa-download me-1"></i>Descargar</button>
-      </div>
-      <pre id="sqlBox" style="white-space:pre-wrap">{{ sql_script }}</pre>
-    </div>
-    {% endif %}
-
-    {% if tablas_result_html and tablas_result_html|length>0 %}
-    <div class="card-glass p-3 p-md-4 mt-3">
-      <h5 class="mb-3"><i class="fa-solid fa-table text-success me-2"></i>Tablas resultantes</h5>
-      {% for name, html in tablas_result_html %}
-      <div class="mb-4">
-        <h6 class="fw-bold">{{ name }}</h6>
-        <div class="table-responsive">{{ html | safe }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // ===== Helpers =====
-    const $ = (s) => document.querySelector(s);
-    const val = (n) => document.querySelector(`[name="${n}"]`)?.value?.trim() || "";
-
-    async function postJSON(url, data){
-      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-      const j = await r.json();
-      if(!r.ok) throw new Error(j.error || 'Error');
-      return j;
-    }
-
-    // ===== Pickers =====
-    function hidePickers(){ $('#dbPicker')?.classList.remove('show'); $('#tblPicker')?.classList.remove('show'); }
-    document.addEventListener('click', (e)=>{ if(!e.target.closest('.picker-wrap')) hidePickers(); });
-
-    function renderDbList(dbs){
-      const c = $('#dbList'); c.innerHTML = '';
-      if(!dbs?.length){ c.innerHTML = '<div class="p-2 text-muted">No hay bases disponibles</div>'; return; }
-      dbs.forEach((db)=>{
-        const a = document.createElement('button');
-        a.type = 'button';
-        a.className = 'list-group-item list-group-item-action';
-        a.textContent = db;
-        a.addEventListener('click', ()=>{
-          document.querySelector('[name="sql_db"]').value = db;
-          document.querySelector('[name="sql_table"]').value = '';
-          hidePickers();
-        });
-        c.appendChild(a);
-      });
-    }
-
-    function renderTablesTree(grouped){
-      const el = $('#tablesTree'); el.innerHTML = '';
-      const schemas = Object.keys(grouped||{});
-      if(!schemas.length){ el.innerHTML = '<div class="p-2 text-muted">No se encontraron tablas.</div>'; return; }
-
-      let html = '';
-      schemas.forEach((schema, i)=>{
-        html += `
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="h${i}">
-              <button class="accordion-button ${i ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#c${i}">
-                <i class="fa-solid fa-folder-tree me-2"></i>${schema}
-              </button>
-            </h2>
-            <div id="c${i}" class="accordion-collapse collapse ${i ? '' : 'show'}">
-              <div class="accordion-body p-0">
-                <ul class="list-group list-group-flush">`;
-
-        const tables = grouped[schema] || [];
-        for(const t of tables){
-          html += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span>${schema}.${t}</span>
-              <button type="button" class="btn btn-sm btn-outline-success pick" data-schema="${schema}" data-table="${t}">
-                <i class="fa-solid fa-hand-pointer me-1"></i>Seleccionar
-              </button>
-            </li>`;
-        }
-
-        html += `
+            {% if resultado_2fn %}
+            <div class="analysis-card alert alert-2fn fade-in">
+                <div class="analysis-title">
+                    <i class="fas fa-layer-group"></i>
+                    Análisis Segunda Forma Normal (2FN)
+                </div>
+                <ul class="analysis-list">
+                    {% for msg in resultado_2fn %}
+                        <li>{{ msg }}</li>
+                    {% endfor %}
                 </ul>
-              </div>
             </div>
-          </div>`;
-      });
+            {% endif %}
 
-      el.innerHTML = html;
+            {% if resultado_3fn %}
+            <div class="analysis-card alert alert-3fn fade-in">
+                <div class="analysis-title">
+                    <i class="fas fa-check-circle"></i>
+                    Análisis Tercera Forma Normal (3FN)
+                </div>
+                <ul class="analysis-list">
+                    {% for msg in resultado_3fn %}
+                        <li>{{ msg }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-      el.querySelectorAll('.pick').forEach((b)=>{
-        b.addEventListener('click', ()=>{
-          const s = b.getAttribute('data-schema');
-          const t = b.getAttribute('data-table');
-          document.querySelector('[name="sql_schema"]').value = s;
-          document.querySelector('[name="sql_table"]').value = t;
-          hidePickers();
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Animación de carga
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const button = this.querySelector('.btn-upload');
+            button.classList.add('loading');
+            button.disabled = true;
         });
-      });
-    }
 
-    // ===== Acciones con servidor manual =====
-    async function openDbPicker(){
-      try{
-        const server = val('sql_server'); // <- NUEVO: enviamos servidor si lo hay
-        const res = await postJSON('/api/sql/probe', server ? { server } : {});
-        // Feedback visual del servidor realmente usado
-        if(res.server){
-          $('#serverProbe').innerHTML = `<i class="fa-solid fa-circle-check"></i> Conectado a: <b>${res.server}</b>`;
-        }else{
-          $('#serverProbe').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> No se pudo autodetectar servidor. Ingresa uno manualmente.`;
-        }
-        renderDbList(res.databases || []);
-        $('#dbPicker').classList.add('show');
-      }catch(err){
-        console.error('probe failed:', err);
-        $('#serverProbe').innerHTML = `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> ${err.message}</span>`;
-        alert('No se pudo obtener las bases de datos.\n' + err.message);
-      }
-    }
+        // Validación de archivos
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file && !file.name.toLowerCase().endsWith('.csv')) {
+                    alert('Por favor, selecciona un archivo CSV válido.');
+                    e.target.value = '';
+                }
+            });
+        });
 
-    async function openTablesPicker(){
-      const db = val('sql_db');
-      if(!db){ $('#dbPicker').classList.add('show'); return; }
-      try{
-        const server = val('sql_server'); // <- NUEVO
-        const body = server ? { server, database: db } : { database: db };
-        const res = await postJSON('/api/sql/tables', body);
-        renderTablesTree(res.schemas || {});
-        $('#tblPicker').classList.add('show');
-      }catch(err){
-        console.error('tables failed:', err);
-        alert('No se pudieron listar las tablas.\n' + err.message);
-      }
-    }
+        // Efectos visuales mejorados
+        document.addEventListener('DOMContentLoaded', function() {
+            // Observador para animaciones de entrada
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
 
-    // Botón "Probar servidor y listar bases"
-    document.getElementById('btnProbeServer')?.addEventListener('click', openDbPicker);
-
-    // Eventos (click para abrir pickers)
-    document.querySelector('[name="sql_db"]')?.addEventListener('click', openDbPicker);
-    document.querySelector('[name="sql_table"]')?.addEventListener('click', openTablesPicker);
-
-    // Copiar / Descargar SQL
-    document.getElementById('copySql')?.addEventListener('click', async ()=>{
-      const t = document.getElementById('sqlBox')?.innerText || '';
-      if(!t) return;
-      await navigator.clipboard.writeText(t);
-      alert('Script SQL copiado.');
-    });
-    document.getElementById('dlSql')?.addEventListener('click', ()=>{
-      const t = document.getElementById('sqlBox')?.innerText || '';
-      if(!t) return;
-      const blob = new Blob([t], {type:'text/sql;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download='normalizacion_3FN.sql'; document.body.appendChild(a);
-      a.click(); URL.revokeObjectURL(url); a.remove();
-    });
-
-    // Validación submit
-    document.getElementById('sqlForm')?.addEventListener('submit', (e)=>{
-      if(!val('sql_db') || !val('sql_table')){
-        e.preventDefault();
-        alert('Selecciona Base de datos y Tabla.');
-      }
-    });
-
-    // Validación CSV
-    document.querySelectorAll('input[type="file"]').forEach((inp)=>{
-      inp.addEventListener('change', (e)=>{
-        const f = e.target.files[0];
-        if(f && !f.name.toLowerCase().endsWith('.csv')) e.target.value='';
-      });
-    });
-  </script>
+            // Aplicar observador a elementos con animación
+            document.querySelectorAll('.fade-in').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
 </body>
 </html>

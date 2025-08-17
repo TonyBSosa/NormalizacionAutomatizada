@@ -1,0 +1,3 @@
+Tabla,Atributo,tipo,llave
+Empleados,ID,INT,PK
+Empleados,Nombre,Varchar(100),

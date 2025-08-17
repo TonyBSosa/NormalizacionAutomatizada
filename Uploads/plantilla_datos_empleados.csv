@@ -1,0 +1,7 @@
+﻿IdEmpleado,Nombre,Departamento,Salario,IdJefe
+101,Ana López,Ventas,1500.0,105.0
+102,Carlos Pérez,Ventas,1400.0,105.0
+103,María Gómez,Recursos Humanos,1600.0,106.0
+104,Luis Reyes,Recursos Humanos,1550.0,106.0
+105,Pedro Aguilar,Ventas,2000.0,
+106,Sofía Torres,Recursos Humanos,2100.0,

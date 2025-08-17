@@ -1,0 +1,5 @@
+venv/
+__pycache__/
+*.pyc
+git commit -m "Remove venv from repository and add to .gitignore"
+git push
