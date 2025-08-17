@@ -23,6 +23,7 @@
       max-height:280px; overflow:auto; margin-top:.25rem;
     }
     .picker-panel.show{ display:block; }
+    .hint{ font-size:.85rem; color:#6c757d; }
   </style>
 </head>
 <body>
@@ -66,12 +67,35 @@
           </form>
         </div>
 
-        <!-- SQL (autoconexión, sin servidor) -->
+        <!-- SQL con campo Servidor opcional -->
         <div class="tab-pane fade show active" id="sql-pane">
           <form method="POST" id="sqlForm">
             <input type="hidden" name="source" value="sql" />
             <input type="hidden" name="sql_schema" value="dbo" />
             <div class="row g-3">
+              <!-- NUEVO: input de servidor -->
+
+              <div class="col-md-12">
+          <label class="form-label fw-semibold">Servidor (opcional)</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-computer"></i></span>
+            <input
+              type="text"
+              name="sql_server"
+              class="form-control"
+              placeholder="Ej: MI-PC\\SQLEXPRESS o localhost"
+              autocomplete="off">
+            <button type="button" id="btnProbeServer" class="btn btn-outline-secondary">
+              <i class="fa-solid fa-plug-circle-bolt me-1"></i>Probar servidor y listar bases
+            </button>
+          </div>
+          <div class="hint mt-1">
+            Déjalo vacío para <b>autodetección</b>. Ingresa <code>HOST\INSTANCIA</code> si tu SQL no es local o está en una instancia nombrada.
+          </div>
+          <div id="serverProbe" class="hint mt-1"></div>
+        </div>
+
+
               <div class="col-md-6 picker-wrap">
                 <label class="form-label fw-semibold">Base de datos</label>
                 <input type="text" name="sql_db" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
@@ -80,6 +104,7 @@
                   <div id="dbList" class="list-group list-group-flush"></div>
                 </div>
               </div>
+
               <div class="col-md-6 picker-wrap">
                 <label class="form-label fw-semibold">Tabla</label>
                 <input type="text" name="sql_table" class="form-control" placeholder="Haz clic para listar" autocomplete="off" readonly>
@@ -89,6 +114,7 @@
                 </div>
               </div>
             </div>
+
             <div class="text-center mt-4">
               <button class="btn btn-primary px-4"><i class="fa-solid fa-play me-2"></i>Conectar y Normalizar</button>
             </div>
@@ -243,14 +269,22 @@
       });
     }
 
-    // ===== Acciones (autoconexión) =====
+    // ===== Acciones con servidor manual =====
     async function openDbPicker(){
       try{
-        const res = await postJSON('/api/sql/probe', {});
+        const server = val('sql_server'); // <- NUEVO: enviamos servidor si lo hay
+        const res = await postJSON('/api/sql/probe', server ? { server } : {});
+        // Feedback visual del servidor realmente usado
+        if(res.server){
+          $('#serverProbe').innerHTML = `<i class="fa-solid fa-circle-check"></i> Conectado a: <b>${res.server}</b>`;
+        }else{
+          $('#serverProbe').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> No se pudo autodetectar servidor. Ingresa uno manualmente.`;
+        }
         renderDbList(res.databases || []);
         $('#dbPicker').classList.add('show');
       }catch(err){
         console.error('probe failed:', err);
+        $('#serverProbe').innerHTML = `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> ${err.message}</span>`;
         alert('No se pudo obtener las bases de datos.\n' + err.message);
       }
     }
@@ -259,7 +293,9 @@
       const db = val('sql_db');
       if(!db){ $('#dbPicker').classList.add('show'); return; }
       try{
-        const res = await postJSON('/api/sql/tables', { database: db });
+        const server = val('sql_server'); // <- NUEVO
+        const body = server ? { server, database: db } : { database: db };
+        const res = await postJSON('/api/sql/tables', body);
         renderTablesTree(res.schemas || {});
         $('#tblPicker').classList.add('show');
       }catch(err){
@@ -268,7 +304,10 @@
       }
     }
 
-    // Eventos
+    // Botón "Probar servidor y listar bases"
+    document.getElementById('btnProbeServer')?.addEventListener('click', openDbPicker);
+
+    // Eventos (click para abrir pickers)
     document.querySelector('[name="sql_db"]')?.addEventListener('click', openDbPicker);
     document.querySelector('[name="sql_table"]')?.addEventListener('click', openTablesPicker);
 
